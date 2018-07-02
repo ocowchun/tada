@@ -1,15 +1,32 @@
-## tada
-Terminal dashboard 
+#SILLL IN DEVELOPMENT⛏
 
-Plugin architecture 
+## tada
+> Terminal dashboard
+
+## Requeirements
+* Go
+* libgit2
+
+## Install
+```
+$ brew install libgit2
+$ go get github.com/ocowchun/tada
+$ cd ~/src/github.com/ocowchun/tada
+$ git checkout develop
+$ export TADA_GITHUB_TOKEN="your-personal-token"
+$ go run tada run
+```
+
+
+Plugin architecture
 Golang
 
-GitHub pr
-Codeship status
-Circleci status
-Heroku status
-Metabase
-Rollbar 
+* GitHub pr
+* Codeship status
+* Circleci status
+* Heroku status
+* Metabase
+* Rollbar
 
 ## TODO
 - [ ] package manager
