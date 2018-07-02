@@ -87,13 +87,26 @@ https://developer.github.com/v4/enum/pullrequestreviewstate/
       edges {
         node {
           title
-          reviews(last: 5) {
+          commits(last:1){
+            edges{
+              node{
+                commit {
+                  commitUrl
+                  status{
+                    state
+                  }
+                }
+              }
+            }
+          }
+          reviews(last: 5,) {
             edges {
               node {
                 author {
                   login
                 }
                 state
+                createdAt
               }
             }
           }

@@ -1,8 +1,6 @@
 package foo
 
 import (
-	"time"
-
 	"github.com/gdamore/tcell"
 	"github.com/ocowchun/tada/widgets"
 	"github.com/rivo/tview"
@@ -43,12 +41,5 @@ func (w *FooWidget) Render(width int) []string {
 func NewWidget() *widgets.Widget {
 	box := &FooWidget{}
 	widget := widgets.NewWidget(box)
-	go func() {
-		for {
-			widget.Render()
-			time.Sleep(1000 * time.Millisecond)
-		}
-	}()
-
 	return widget
 }

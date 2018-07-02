@@ -19,7 +19,6 @@ import (
 )
 
 type GitHubWidget struct {
-	// box1    *tview.TextView
 	isHover bool
 	isFocus bool
 	width   int
@@ -31,7 +30,7 @@ type Issue struct {
 	title                string
 	isHover              bool
 	url                  string
-	status               string
+	status               ghbv4.StatusState
 	approvedCount        int
 	changeRequestedCount int
 	commentedCount       int
@@ -86,13 +85,21 @@ func newHorizontalLine(length int) string {
 	return line
 }
 
-// only care content no border
 func (w *GitHubWidget) Render(width int) []string {
 	lines := []string{}
 	for i := 0; i < len(w.issues); i++ {
 		issue := w.issues[i]
 		line := &widgets.Line{
 			Width: width,
+		}
+		switch issue.status {
+		case ghbv4.StatusStateSuccess:
+			line.AddSentence(&widgets.Sentence{Content: "V ", Color: "green"})
+		case ghbv4.StatusStatePending:
+			line.AddSentence(&widgets.Sentence{Content: "O ", Color: "yellow"})
+		case ghbv4.StatusStateFailure:
+			line.AddSentence(&widgets.Sentence{Content: "X ", Color: "red"})
+
 		}
 
 		if issue.isHover {
@@ -173,19 +180,8 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *tcell.Even
 	}
 }
 
-func initGithubClient() *ghb.Client {
-	username := "ocowchun"
-	password := os.Getenv("TADA_GITHUB_TOKEN")
-	tp := &ghb.BasicAuthTransport{
-		Username: username,
-		Password: password,
-	}
-	githubClient := ghb.NewClient(tp.Client())
-	return githubClient
-}
-
 func initGithubV4Client() *ghbv4.Client {
-	username := "ocowchun"
+	username := os.Getenv("TADA_GITHUB_USERNAME")
 	password := os.Getenv("TADA_GITHUB_TOKEN")
 	tp := &ghb.BasicAuthTransport{
 		Username: username,
@@ -202,9 +198,19 @@ func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 		}
 		State ghbv4.PullRequestReviewState
 	}
+	type commit struct {
+		COMMIT struct {
+			Status struct {
+				State ghbv4.StatusState
+			}
+		}
+	}
 	type pullRequest struct {
 		Title   string
 		Url     ghbv4.URI
+		Commits struct {
+			Nodes []commit
+		} `graphql:"commits(last:1)"`
 		Reviews struct {
 			Nodes []review
 		} `graphql:"reviews(last: 10)"`
@@ -223,12 +229,18 @@ func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 
 	err := client.Query(context.Background(), &query, nil)
 	if err != nil {
+		fmt.Println(err)
 	}
 	issues := []*Issue{}
 	for _, pr := range query.Viewer.PullRequests.Nodes {
 		stateCountMap := make(map[ghbv4.PullRequestReviewState]int)
+		reviewrMap := make(map[ghbv4.String]bool)
+
 		for _, r := range pr.Reviews.Nodes {
-			stateCountMap[r.State] = stateCountMap[r.State] + 1
+			if reviewrMap[r.Author.Login] == false {
+				reviewrMap[r.Author.Login] = true
+				stateCountMap[r.State] = stateCountMap[r.State] + 1
+			}
 		}
 
 		i := &Issue{
@@ -238,6 +250,7 @@ func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 			approvedCount:        stateCountMap[ghbv4.PullRequestReviewStateApproved],
 			changeRequestedCount: stateCountMap[ghbv4.PullRequestReviewStateChangesRequested],
 			commentedCount:       stateCountMap[ghbv4.PullRequestReviewStateCommented],
+			status:               pr.Commits.Nodes[0].COMMIT.Status.State,
 		}
 
 		issues = append(issues, i)
@@ -272,19 +285,12 @@ func NewWidget() *widgets.Widget {
 
 	issues := []*Issue{}
 	box.issues = issues
-	refreshInterval := 20
+	refreshInterval := 120
 	go func() {
 		for {
 			box.issues = fetchPullRequestsWithGraphQL(initGithubV4Client())
 			widget.Render()
 			time.Sleep(time.Duration(refreshInterval) * time.Second)
-		}
-	}()
-
-	go func() {
-		for {
-			widget.Render()
-			time.Sleep(1000 * time.Millisecond)
 		}
 	}()
 	return widget
