@@ -2,7 +2,6 @@ package dashboard
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/gdamore/tcell"
@@ -10,14 +9,11 @@ import (
 	"github.com/ocowchun/tada/widgets/foo"
 	"github.com/ocowchun/tada/widgets/github"
 	"github.com/rivo/tview"
-	// "github.com/senorprogrammer/wtf/github"
 )
 
 type Dashboard struct {
-	app *tview.Application
-	// widgets []tview.Primitive
-	widgets []*widgets.Widget
-	// current hover widget idx
+	app            *tview.Application
+	widgets        []*widgets.Widget
 	widgetIdx      int
 	hasFocusWidget bool
 }
@@ -45,20 +41,9 @@ func (d *Dashboard) blur() {
 
 type WithBox interface {
 	Box() *tview.Box
-	// SetBorder(bool)
-	// SetBorderColor(tcell.Color)
 }
 
 func inputCaptureFactory(d *Dashboard) func(event *tcell.EventKey) *tcell.EventKey {
-	// idx := 0
-	// focusedItem := d.widgets[idx]
-	// item := focusedItem.(*tview.Grid)
-	// // item.Box().SetBorder(true)
-	// // item.Box().SetBorderColor(tcell.ColorGreen)
-
-	// item.SetBorder(true)
-	// item.SetBorderColor(tcell.ColorGreen)
-
 	return func(event *tcell.EventKey) *tcell.EventKey {
 		if d.hasFocusWidget == false {
 			switch event.Key() {
@@ -85,7 +70,6 @@ func inputCaptureFactory(d *Dashboard) func(event *tcell.EventKey) *tcell.EventK
 			if d.hasFocusWidget {
 				d.hasFocusWidget = false
 				d.blur()
-				// d.hover(0, d.widgetIdx)
 			} else {
 				d.app.Stop()
 			}
@@ -97,8 +81,6 @@ func inputCaptureFactory(d *Dashboard) func(event *tcell.EventKey) *tcell.EventK
 func (d *Dashboard) Run() {
 	app := tview.NewApplication()
 	d.app = app
-	clockView := tview.NewTextView()
-	clockView.SetTextAlign(tview.AlignCenter).SetText("1")
 
 	newPrimitive := func(text string) tview.Primitive {
 		view := tview.NewTextView().
@@ -111,28 +93,12 @@ func (d *Dashboard) Run() {
 		return view
 	}
 
-	// clockView.SetBorder(true)
-	// clockView.SetBorderColor(tcell.ColorGreen)
-
 	pages := tview.NewPages()
-	// menu := newPrimitive("Menu")
 
 	widget2 := tview.NewGrid().
 		SetBorders(true)
 	widget2.SetBorderColor(tcell.ColorYellow)
 	widget2.AddItem(newPrimitive("widget2 Header"), 0, 0, 4, 3, 0, 0, false)
-
-	go func() {
-		num := 1
-		for {
-			num = num + 1
-			time.Sleep(100 * time.Millisecond)
-			clockView.SetText(strconv.Itoa(num))
-			app.Draw()
-			// app.SetFocus(main)
-			// fmt.Println(main.(*tview.TextView).HasFocus())
-		}
-	}()
 
 	grid := tview.NewGrid().
 		SetColumns(2, 0, 0, 0, 0, 0, 0, 2).
@@ -146,30 +112,6 @@ func (d *Dashboard) Run() {
 	// grid.AddItem(widget2, 1, 1, 1, 1, 0, 100, false)
 	pages.AddPage("grid", grid, true, true)
 
-	// box1 := tview.NewGrid().
-	// 	SetRows(0, 0, 0, 0).
-	// 	SetColumns(0, 0, 0, 0)
-	// box1.SetBorder(true).
-	// 	SetBorderColor(tcell.ColorGreen)
-	// box1.AddItem(newPrimitive("box1"), 0, 0, 1, 1, 0, 0, false)
-
-	// │,┌,─, ,
-	// cells := [][]string{}
-	// newHorizontalLine := func(length int) string {
-	// 	line := ""
-	// 	max := length / 2
-	// 	for i := 0; i < max; i++ {
-	// 		line = line + "─"
-	// 	}
-	// 	if length%2 == 1 {
-	// 		line = line + "─"
-	// 	}
-	// 	return line
-	// }
-
-	// topLine := newHorizontalLine(28)
-	// box1 := tview.NewTextView()
-	// box1.SetText("┌" + topLine + "┐")
 	box1 := github.NewWidget()
 	box2 := foo.NewWidget()
 	// box2 := github.NewWidget()
@@ -186,16 +128,21 @@ func (d *Dashboard) Run() {
 	grid.AddItem(box1, 2, 2, 2, 3, 0, 100, false)
 
 	// pages.
-	// gridItems := []tview.Primitive{menu, main, sideBar, clockView}
-	// gridItems := []tview.Primitive{main, widget2}
-	d.widgets = []*widgets.Widget{box1}
+	d.widgets = []*widgets.Widget{box1, box2}
 	d.widgetIdx = 0
 	app.SetInputCapture(inputCaptureFactory(d))
-	// app.SetFocus(main)
+	go func() {
+		for {
+			for _, widget := range d.widgets {
+				widget.Render()
+			}
+			app.Draw()
+			time.Sleep(1000 * time.Millisecond)
+		}
+	}()
 
 	if err := app.SetRoot(pages, true).Run(); err != nil {
 		fmt.Println("yoyoyo")
-		// fmt.Println(main.GetFocusable())
 		panic(err)
 	}
 }
