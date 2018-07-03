@@ -134,10 +134,12 @@ func (d *Dashboard) Run() {
 	go func() {
 		for {
 			for _, widget := range d.widgets {
-				widget.Render()
+				if !widget.IsRendering() {
+					widget.Render()
+				}
 			}
 			app.Draw()
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}()
 

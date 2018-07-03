@@ -1,6 +1,8 @@
 package widgets
 
 import (
+	"sync"
+
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
@@ -52,8 +54,6 @@ type Box interface {
 	InputCaptureFactory(render func()) func(event *tcell.EventKey) *tcell.EventKey
 	Focus(delegate func(p tview.Primitive))
 	Blur()
-	// Hover()
-	// Unhover()
 }
 
 func (w *Widget) Hover() {
@@ -67,12 +67,19 @@ func (w *Widget) Unhover() {
 }
 
 type Widget struct {
-	box      Box
-	textView *tview.TextView
-	isHover  bool
-	isFocus  bool
-	width    int
-	height   int
+	box        Box
+	textView   *tview.TextView
+	isHover    bool
+	isFocus    bool
+	width      int
+	height     int
+	hasChanged bool
+	sync.Mutex
+	isDrawing bool
+}
+
+func (w *Widget) IsRendering() bool {
+	return w.isDrawing
 }
 
 func NewWidget(box Box) *Widget {
@@ -91,7 +98,15 @@ func NewWidget(box Box) *Widget {
 }
 
 func (w *Widget) Draw(screen tcell.Screen) {
-	w.textView.Draw(screen)
+	w.Lock()
+	if w.isDrawing {
+		w.Unlock()
+	} else {
+		w.isDrawing = true
+		w.Unlock()
+		w.textView.Draw(screen)
+		w.isDrawing = false
+	}
 }
 
 func (w *Widget) GetRect() (int, int, int, int) {
@@ -159,41 +174,44 @@ func newHorizontalLine(length int) string {
 }
 
 func (w *Widget) Render() {
-	_, _, width, height := w.textView.GetRect()
+	// stop set text when draw
+	if !w.isDrawing {
+		_, _, width, height := w.textView.GetRect()
 
-	// I don't know why this broken
-	// if w.width != width && w.height != height {
-	w.width = width
-	w.height = height
-	// }
-	lines := w.box.Render(w.width - 3)
-	leftBorder := " |"
-	rightBorder := "|"
-	horizontalLine := " +" + newHorizontalLine(width-3) + "+"
+		// I don't know why this broken
+		// if w.width != width && w.height != height {
+		w.width = width
+		w.height = height
+		// }
+		lines := w.box.Render(w.width - 3)
+		leftBorder := " |"
+		rightBorder := "|"
+		horizontalLine := " +" + newHorizontalLine(width-3) + "+"
 
-	if w.isFocus {
-		horizontalLine = "[green] +" + newHorizontalLine(width-3) + "+[white]"
-		leftBorder = "[green] |[white]"
-		rightBorder = "[green]|[white]"
-	} else if w.isHover {
-		horizontalLine = "[yellow] +" + newHorizontalLine(width-3) + "+[white]"
-		leftBorder = "[yellow] |[white]"
-		rightBorder = "[yellow]|[white]"
-	}
-
-	if len(lines) > height-2 {
-		lines = lines[0 : height-2]
-	} else if len(lines) < height-2 {
-		missingLineCount := height - (2 + len(lines))
-		for i := 0; i < missingLineCount; i++ {
-			lines = append(lines, buildLine("", width-3))
+		if w.isFocus {
+			horizontalLine = "[green] +" + newHorizontalLine(width-3) + "+[white]"
+			leftBorder = "[green] |[white]"
+			rightBorder = "[green]|[white]"
+		} else if w.isHover {
+			horizontalLine = "[yellow] +" + newHorizontalLine(width-3) + "+[white]"
+			leftBorder = "[yellow] |[white]"
+			rightBorder = "[yellow]|[white]"
 		}
-	}
-	text := horizontalLine
 
-	for i := 0; i < len(lines); i++ {
-		text += leftBorder + lines[i] + rightBorder
+		if len(lines) > height-2 {
+			lines = lines[0 : height-2]
+		} else if len(lines) < height-2 {
+			missingLineCount := height - (2 + len(lines))
+			for i := 0; i < missingLineCount; i++ {
+				lines = append(lines, buildLine("", width-3))
+			}
+		}
+		text := horizontalLine
+
+		for i := 0; i < len(lines); i++ {
+			text += leftBorder + lines[i] + rightBorder
+		}
+		text = text + horizontalLine
+		w.textView.SetText(text)
 	}
-	text = text + horizontalLine
-	w.textView.SetText(text)
 }
