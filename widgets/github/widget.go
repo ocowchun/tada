@@ -34,6 +34,7 @@ type Issue struct {
 	approvedCount        int
 	changeRequestedCount int
 	commentedCount       int
+	repositoryName       string
 }
 
 func (w *GitHubWidget) Focus(delegate func(p tview.Primitive)) {
@@ -102,11 +103,14 @@ func (w *GitHubWidget) Render(width int) []string {
 
 		}
 
+		titleColor := "white"
 		if issue.isHover {
-			line.AddSentence(&widgets.Sentence{Content: issue.title, Color: "red"})
-		} else {
-			line.AddSentence(&widgets.Sentence{Content: issue.title, Color: "white"})
+			titleColor = "red"
 		}
+		line.AddSentence(&widgets.Sentence{
+			Content: issue.repositoryName + "/" + issue.title,
+			Color:   titleColor,
+		})
 
 		if issue.approvedCount > 0 {
 			line.AddSentence(&widgets.Sentence{
@@ -206,8 +210,11 @@ func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 		}
 	}
 	type pullRequest struct {
-		Title   string
-		Url     ghbv4.URI
+		Title      string
+		Url        ghbv4.URI
+		Repository struct {
+			Name string
+		}
 		Commits struct {
 			Nodes []commit
 		} `graphql:"commits(last:1)"`
@@ -251,6 +258,7 @@ func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 			changeRequestedCount: stateCountMap[ghbv4.PullRequestReviewStateChangesRequested],
 			commentedCount:       stateCountMap[ghbv4.PullRequestReviewStateCommented],
 			status:               pr.Commits.Nodes[0].COMMIT.Status.State,
+			repositoryName:       pr.Repository.Name,
 		}
 
 		issues = append(issues, i)
