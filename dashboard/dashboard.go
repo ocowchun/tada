@@ -137,7 +137,7 @@ func (d *Dashboard) Run() {
 				widget.Render()
 			}
 			app.Draw()
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 		}
 	}()
 
