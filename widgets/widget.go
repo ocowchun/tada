@@ -160,11 +160,12 @@ func newHorizontalLine(length int) string {
 
 func (w *Widget) Render() {
 	_, _, width, height := w.textView.GetRect()
-	// fmt.Println(width, height)
-	if w.width != width && w.height != height {
-		w.width = width
-		w.height = height
-	}
+
+	// I don't know why this broken
+	// if w.width != width && w.height != height {
+	w.width = width
+	w.height = height
+	// }
 	lines := w.box.Render(w.width - 3)
 	leftBorder := " |"
 	rightBorder := "|"
