@@ -25,6 +25,7 @@ type GitHubWidget struct {
 	width   int
 	height  int
 	issues  []*Issue
+	loading bool
 }
 
 type Issue struct {
@@ -89,49 +90,58 @@ func newHorizontalLine(length int) string {
 
 func (w *GitHubWidget) Render(width int) []string {
 	lines := []string{}
-	for i := 0; i < len(w.issues); i++ {
-		issue := w.issues[i]
+	if w.loading {
 		line := &widgets.Line{
 			Width: width,
 		}
-		switch issue.status {
-		case ghbv4.StatusStateSuccess:
-			line.AddSentence(&widgets.Sentence{Content: "V ", Color: "green"})
-		case ghbv4.StatusStatePending:
-			line.AddSentence(&widgets.Sentence{Content: "O ", Color: "yellow"})
-		case ghbv4.StatusStateFailure:
-			line.AddSentence(&widgets.Sentence{Content: "X ", Color: "red"})
-
-		}
-
-		titleColor := "white"
-		if issue.isHover {
-			titleColor = "red"
-		}
-		line.AddSentence(&widgets.Sentence{
-			Content: issue.repositoryName + "/" + issue.title,
-			Color:   titleColor,
-		})
-
-		if issue.approvedCount > 0 {
-			line.AddSentence(&widgets.Sentence{
-				Content: " V:" + strconv.Itoa(issue.approvedCount),
-				Color:   "green",
-			})
-		}
-		if issue.changeRequestedCount > 0 {
-			line.AddSentence(&widgets.Sentence{
-				Content: " X:" + strconv.Itoa(issue.changeRequestedCount),
-				Color:   "red",
-			})
-		}
-		if issue.commentedCount > 0 {
-			line.AddSentence(&widgets.Sentence{
-				Content: " C:" + strconv.Itoa(issue.commentedCount),
-				Color:   "yellow",
-			})
-		}
+		line.AddSentence(&widgets.Sentence{Content: "loading...", Color: "white"})
 		lines = append(lines, line.String())
+
+	} else {
+		for i := 0; i < len(w.issues); i++ {
+			issue := w.issues[i]
+			line := &widgets.Line{
+				Width: width,
+			}
+			switch issue.status {
+			case ghbv4.StatusStateSuccess:
+				line.AddSentence(&widgets.Sentence{Content: "V ", Color: "green"})
+			case ghbv4.StatusStatePending:
+				line.AddSentence(&widgets.Sentence{Content: "O ", Color: "yellow"})
+			case ghbv4.StatusStateFailure:
+				line.AddSentence(&widgets.Sentence{Content: "X ", Color: "red"})
+
+			}
+
+			titleColor := "white"
+			if issue.isHover {
+				titleColor = "red"
+			}
+			line.AddSentence(&widgets.Sentence{
+				Content: issue.repositoryName + "/" + issue.title,
+				Color:   titleColor,
+			})
+
+			if issue.approvedCount > 0 {
+				line.AddSentence(&widgets.Sentence{
+					Content: " V:" + strconv.Itoa(issue.approvedCount),
+					Color:   "green",
+				})
+			}
+			if issue.changeRequestedCount > 0 {
+				line.AddSentence(&widgets.Sentence{
+					Content: " X:" + strconv.Itoa(issue.changeRequestedCount),
+					Color:   "red",
+				})
+			}
+			if issue.commentedCount > 0 {
+				line.AddSentence(&widgets.Sentence{
+					Content: " C:" + strconv.Itoa(issue.commentedCount),
+					Color:   "yellow",
+				})
+			}
+			lines = append(lines, line.String())
+		}
 	}
 
 	return lines
@@ -149,6 +159,15 @@ func findHoverIssue(issues []*Issue) int {
 func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *tcell.EventKey) *tcell.EventKey {
 	return func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
+		case tcell.KeyRune:
+			switch event.Rune() {
+			case 'r':
+				w.loading = true
+				render()
+				w.issues = fetchPullRequestsWithGraphQL(initGithubV4Client())
+				w.loading = false
+				render()
+			}
 		case tcell.KeyDown:
 			issueIdx := findHoverIssue(w.issues)
 			if issueIdx == -1 {
@@ -386,7 +405,7 @@ func fetchPullRequests(client *ghb.Client) []*Issue {
 }
 
 func NewWidget() *widgets.Widget {
-	box := &GitHubWidget{}
+	box := &GitHubWidget{loading: true}
 	widget := widgets.NewWidget(box)
 
 	issues := []*Issue{}
@@ -395,6 +414,7 @@ func NewWidget() *widgets.Widget {
 	go func() {
 		for {
 			box.issues = fetchPullRequestsWithGraphQL(initGithubV4Client())
+			box.loading = false
 			widget.Render()
 			time.Sleep(time.Duration(refreshInterval) * time.Second)
 		}
