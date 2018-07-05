@@ -247,7 +247,7 @@ func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 
 	var query struct {
 		Viewer struct {
-			Login        ghbv4.String
+			Login        string
 			Name         ghbv4.String
 			CreatedAt    ghbv4.DateTime
 			PullRequests struct {
@@ -262,15 +262,7 @@ func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 	}
 	issues := []*Issue{}
 	for _, pr := range query.Viewer.PullRequests.Nodes {
-		// handle review status
-		// for _, r := range pr.Reviews.Nodes {
-		// 	if reviewrMap[r.Author.Login] == false {
-		// 		reviewrMap[r.Author.Login] = true
-		// 		stateCountMap[r.State] = stateCountMap[r.State] + 1
-		// 	}
-		// }
-
-		stateCountMap := computeReviewStatus(pr, true)
+		stateCountMap := computeReviewStatus(pr, query.Viewer.Login)
 		i := &Issue{
 			title:                pr.Title,
 			isHover:              false,
@@ -303,9 +295,9 @@ func (a ByCreatedAt) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 func (a ByCreatedAt) Less(i, j int) bool { return a[i].createdAt.Unix() < a[j].createdAt.Unix() }
 
-func computeReviewStatus(pr PullRequest, complexWay bool) map[ghbv4.PullRequestReviewState]int {
+func computeReviewStatus(pr PullRequest, authorUsername string) map[ghbv4.PullRequestReviewState]int {
 	stateCountMap := make(map[ghbv4.PullRequestReviewState]int)
-
+	complexWay := true
 	if complexWay {
 		reviewEvents := []ReviewEvent{}
 		//idea: request:1,request:2, change:1,request:1,approve:1 =>approve:1, request:2
@@ -321,22 +313,24 @@ func computeReviewStatus(pr PullRequest, complexWay bool) map[ghbv4.PullRequestR
 		}
 
 		for _, review := range pr.Reviews.Nodes {
-			action := ""
-			switch review.State {
-			case ghbv4.PullRequestReviewStateApproved:
-				action = "approved"
-			case ghbv4.PullRequestReviewStateChangesRequested:
-				action = "changesRequested"
-			case ghbv4.PullRequestReviewStateCommented:
-				action = "commented"
-			}
+			if review.Author.Login != authorUsername {
+				action := ""
+				switch review.State {
+				case ghbv4.PullRequestReviewStateApproved:
+					action = "approved"
+				case ghbv4.PullRequestReviewStateChangesRequested:
+					action = "changesRequested"
+				case ghbv4.PullRequestReviewStateCommented:
+					action = "commented"
+				}
 
-			evt := ReviewEvent{
-				username:  review.Author.Login,
-				createdAt: review.CreatedAt,
-				action:    action,
+				evt := ReviewEvent{
+					username:  review.Author.Login,
+					createdAt: review.CreatedAt,
+					action:    action,
+				}
+				reviewEvents = append(reviewEvents, evt)
 			}
-			reviewEvents = append(reviewEvents, evt)
 		}
 		sort.Sort(ByCreatedAt(reviewEvents))
 		reviewMap := make(map[string]string)
