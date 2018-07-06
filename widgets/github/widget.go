@@ -117,8 +117,19 @@ func (w *GitHubWidget) Render(width int) []string {
 			if issue.isHover {
 				titleColor = "red"
 			}
+
+			title := (issue.repositoryName + "/" + issue.title)
+			maxTitleLength := width - 10
+			if maxTitleLength < 0 {
+				maxTitleLength = 0
+			}
+
+			if len(title) > maxTitleLength {
+				title = title[0:maxTitleLength]
+			}
+
 			line.AddSentence(&widgets.Sentence{
-				Content: issue.repositoryName + "/" + issue.title,
+				Content: title,
 				Color:   titleColor,
 			})
 
