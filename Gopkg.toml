@@ -38,13 +38,13 @@
   name = "github.com/mitchellh/cli"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/libgit2/git2go"
-
-[[constraint]]
   name = "github.com/google/go-github"
   branch = "master"
 
 [[constraint]]
   branch = "master"
   name = "github.com/shurcooL/githubv4"
+
+[[constraint]]
+  name = "gopkg.in/src-d/go-git.v4"
+  version = "v4.4.1"

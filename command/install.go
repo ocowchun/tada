@@ -1,11 +1,15 @@
 package command
 
 import (
+	"fmt"
 	"log"
 	"os/exec"
 	"strings"
 
-	git "github.com/libgit2/git2go"
+	git "gopkg.in/src-d/go-git.v4"
+
+	"github.com/ocowchun/tada/utils"
+
 	"github.com/mitchellh/cli"
 )
 
@@ -17,24 +21,27 @@ func (*InstallCommand) Help() string {
 }
 
 func (*InstallCommand) Run(args []string) int {
-	// fmt.Println(args)
-	// url := "https://github.com/ocowchun/tada-hello-plugin.git"
-	// "github.com/ocowchun/tada-hello-plugin"
 	packagePath := args[0]
+	basePath, err := utils.ExpandHomeDir("~/.tada")
+	if err != nil {
+		log.Printf("%v", err)
+	}
+	// TODO validate packagePath
+	url := "https://" + packagePath + ".git"
 	strs := strings.Split(packagePath, "/")
 	pluginName := strs[len(strs)-1]
-	url := "https://" + packagePath + ".git"
-	path := "/Users/ocowchun/go/src/github.com/ocowchun/tada/_plugins/tada-hello-plugin"
-	options := &git.CloneOptions{Bare: false}
-	_, err := git.Clone(url, path, options)
+	directory := basePath + "/plugins/" + pluginName
+	fmt.Printf("git clone %s %s --recursive", url, directory)
+	_, err = git.PlainClone(directory, false, &git.CloneOptions{
+		URL:               url,
+		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
+	})
 	if err != nil {
 		log.Printf("Git clone with error: %v", err)
 	}
 
-	so := "/Users/ocowchun/go/src/github.com/ocowchun/tada/_plugins/.so/" + pluginName + ".so"
-	mod := path + "/main.go"
-	// buildCommand := "-buildmode=plugin -o " + so + " " + mod
-	// buildCommand = "which go"
+	so := basePath + "/so/" + pluginName + ".so"
+	mod := directory + "/main.go"
 	cmd := exec.Command("go", "build", "-buildmode=plugin", "-o", so, mod)
 	log.Printf("Running command and waiting for it to finish...")
 	output, err := cmd.Output()
@@ -42,6 +49,7 @@ func (*InstallCommand) Run(args []string) int {
 		log.Printf("Command finished with error: %v", err)
 	}
 	log.Printf("Command finished with output: %v", string(output))
+
 	return 0
 }
 
