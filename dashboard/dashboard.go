@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell"
-	"github.com/ocowchun/tada/widgets"
+	widget "github.com/ocowchun/tada/widget"
 	"github.com/ocowchun/tada/widgets/foo"
 	"github.com/ocowchun/tada/widgets/github"
 	"github.com/rivo/tview"
@@ -13,7 +13,7 @@ import (
 
 type Dashboard struct {
 	app            *tview.Application
-	widgets        []*widgets.Widget
+	widgets        []*widget.Widget
 	widgetIdx      int
 	hasFocusWidget bool
 }
@@ -128,7 +128,7 @@ func (d *Dashboard) Run() {
 	grid.AddItem(box1, 2, 2, 2, 3, 0, 100, false)
 
 	// pages.
-	d.widgets = []*widgets.Widget{box1, box2}
+	d.widgets = []*widget.Widget{box1, box2}
 	d.widgetIdx = 0
 	app.SetInputCapture(inputCaptureFactory(d))
 	go func() {

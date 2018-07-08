@@ -2,7 +2,7 @@ package foo
 
 import (
 	"github.com/gdamore/tcell"
-	"github.com/ocowchun/tada/widgets"
+	widget "github.com/ocowchun/tada/widget"
 	"github.com/rivo/tview"
 )
 
@@ -26,10 +26,10 @@ func (w *FooWidget) Render(width int) []string {
 	strs := []string{}
 	max := 3
 	for i := 0; i < max; i++ {
-		line := &widgets.Line{
+		line := &widget.Line{
 			Width: width,
 		}
-		line.AddSentence(&widgets.Sentence{
+		line.AddSentence(&widget.Sentence{
 			Content: "[]foo",
 			Color:   "white",
 		})
@@ -38,8 +38,8 @@ func (w *FooWidget) Render(width int) []string {
 	return strs
 }
 
-func NewWidget() *widgets.Widget {
+func NewWidget() *widget.Widget {
 	box := &FooWidget{}
-	widget := widgets.NewWidget(box)
+	widget := widget.NewWidget(box)
 	return widget
 }

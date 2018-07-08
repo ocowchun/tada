@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ocowchun/tada/widgets"
+	widget "github.com/ocowchun/tada/widget"
 	"github.com/rivo/tview"
 
 	"github.com/gdamore/tcell"
@@ -91,25 +91,25 @@ func newHorizontalLine(length int) string {
 func (w *GitHubWidget) Render(width int) []string {
 	lines := []string{}
 	if w.loading {
-		line := &widgets.Line{
+		line := &widget.Line{
 			Width: width,
 		}
-		line.AddSentence(&widgets.Sentence{Content: "loading...", Color: "white"})
+		line.AddSentence(&widget.Sentence{Content: "loading...", Color: "white"})
 		lines = append(lines, line.String())
 
 	} else {
 		for i := 0; i < len(w.issues); i++ {
 			issue := w.issues[i]
-			line := &widgets.Line{
+			line := &widget.Line{
 				Width: width,
 			}
 			switch issue.status {
 			case ghbv4.StatusStateSuccess:
-				line.AddSentence(&widgets.Sentence{Content: "V ", Color: "green"})
+				line.AddSentence(&widget.Sentence{Content: "V ", Color: "green"})
 			case ghbv4.StatusStatePending:
-				line.AddSentence(&widgets.Sentence{Content: "O ", Color: "yellow"})
+				line.AddSentence(&widget.Sentence{Content: "O ", Color: "yellow"})
 			case ghbv4.StatusStateFailure:
-				line.AddSentence(&widgets.Sentence{Content: "X ", Color: "red"})
+				line.AddSentence(&widget.Sentence{Content: "X ", Color: "red"})
 
 			}
 
@@ -128,25 +128,25 @@ func (w *GitHubWidget) Render(width int) []string {
 				title = title[0:maxTitleLength]
 			}
 
-			line.AddSentence(&widgets.Sentence{
+			line.AddSentence(&widget.Sentence{
 				Content: title,
 				Color:   titleColor,
 			})
 
 			if issue.approvedCount > 0 {
-				line.AddSentence(&widgets.Sentence{
+				line.AddSentence(&widget.Sentence{
 					Content: " V:" + strconv.Itoa(issue.approvedCount),
 					Color:   "green",
 				})
 			}
 			if issue.changeRequestedCount > 0 {
-				line.AddSentence(&widgets.Sentence{
+				line.AddSentence(&widget.Sentence{
 					Content: " X:" + strconv.Itoa(issue.changeRequestedCount),
 					Color:   "red",
 				})
 			}
 			if issue.commentedCount > 0 {
-				line.AddSentence(&widgets.Sentence{
+				line.AddSentence(&widget.Sentence{
 					Content: " C:" + strconv.Itoa(issue.commentedCount),
 					Color:   "yellow",
 				})
@@ -415,9 +415,9 @@ func fetchPullRequests(client *ghb.Client) []*Issue {
 	return issues
 }
 
-func NewWidget() *widgets.Widget {
+func NewWidget() *widget.Widget {
 	box := &GitHubWidget{loading: true}
-	widget := widgets.NewWidget(box)
+	widget := widget.NewWidget(box)
 
 	issues := []*Issue{}
 	box.issues = issues
