@@ -1,16 +1,14 @@
 package foo
 
 import (
-	"github.com/gdamore/tcell"
 	widget "github.com/ocowchun/tada/widget"
-	"github.com/rivo/tview"
 )
 
 type FooWidget struct {
 	isFocus bool
 }
 
-func (w *FooWidget) Focus(delegate func(p tview.Primitive)) {
+func (w *FooWidget) Focus() {
 	w.isFocus = true
 }
 
@@ -18,7 +16,7 @@ func (w *FooWidget) Blur() {
 	w.isFocus = false
 }
 
-func (w *FooWidget) InputCaptureFactory(render func()) func(event *tcell.EventKey) *tcell.EventKey {
+func (w *FooWidget) InputCaptureFactory(render func()) func(event *widget.KeyEvent) {
 	return nil
 }
 
