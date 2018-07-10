@@ -1,7 +1,7 @@
 {
   "widgets": [
     {
-      "name": "tada-github",
+      "name": "tada-bar",
       "width": 2,
       "height": 2,
       "x": 0,
@@ -11,7 +11,7 @@
       "name": "tada-foo",
       "width": 2,
       "height": 2,
-      "x": 2,
+      "x": 3,
       "y": 0
     }
 

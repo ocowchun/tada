@@ -115,23 +115,33 @@ func (d *Dashboard) Run() {
 		"tada-github": github.NewWidget,
 		"tada-foo":    foo.NewWidget,
 	}
+
 	for _, widgetConfig := range config.Widgets {
 		newWidget := buildinWidgets[widgetConfig.Name]
 		var primitive tview.Primitive
-		widget := newWidget()
-		primitive = widget
+		var widget *widget.Widget
+		if newWidget != nil {
+			widget = newWidget()
+			primitive = widget
+		} else {
+			widget = LoadPlugin(widgetConfig.Name)
+			primitive = widget
+		}
 		grid.AddItem(primitive, widgetConfig.Y+1, widgetConfig.X+1, widgetConfig.Height,
 			widgetConfig.Width, 0, 100, false)
 		widgets = append(widgets, widget)
 	}
+
 	d.widgets = widgets
 	d.widgetIdx = 0
 	app.SetInputCapture(inputCaptureFactory(d))
 	go func() {
+		// without below line, the program will broken = =
+		foo.NewWidget().Render()
 		for {
-			for _, widget := range d.widgets {
-				if !widget.IsRendering() {
-					widget.Render()
+			for _, w := range d.widgets {
+				if !w.IsRendering() {
+					w.Render()
 				}
 			}
 			app.Draw()

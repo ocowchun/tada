@@ -68,6 +68,7 @@ func main() {
 	c.Commands = map[string]cli.CommandFactory{
 		"run":     command.RunCommandFactory,
 		"install": command.InstallCommandFactory,
+		"link":    command.LinkCommandFactory,
 		"test":    testCommandFactory,
 	}
 

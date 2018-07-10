@@ -13,7 +13,12 @@ https://stackoverflow.com/questions/42218472/how-do-go-plugin-dependencies-work/
 
 ## package manager
 ```sh
+# install and build plugin
 tada install package-name
+
+# link plugin
+tada link foo-bar.so
+
 ```
 * read installed packages from a storage (file or kv store?)
 
