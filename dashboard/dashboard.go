@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell"
+	tadaConfig "github.com/ocowchun/tada/config"
+	"github.com/ocowchun/tada/utils"
 	widget "github.com/ocowchun/tada/widget"
 	"github.com/ocowchun/tada/widgets/foo"
 	"github.com/ocowchun/tada/widgets/github"
@@ -81,8 +83,9 @@ func inputCaptureFactory(d *Dashboard) func(event *tcell.EventKey) *tcell.EventK
 func (d *Dashboard) Run() {
 	app := tview.NewApplication()
 	d.app = app
-	path := "/Users/ocowchun/go/src/github.com/ocowchun/tada/tada.json"
-	config := LoadConfig(path)
+	basePath := utils.FindBasePath()
+	path := basePath + "/tada.json"
+	config := tadaConfig.LoadConfig(path)
 	newPrimitive := func(text string) tview.Primitive {
 		view := tview.NewTextView().
 			SetTextAlign(tview.AlignCenter).
@@ -119,17 +122,18 @@ func (d *Dashboard) Run() {
 	for _, widgetConfig := range config.Widgets {
 		newWidget := buildinWidgets[widgetConfig.Name]
 		var primitive tview.Primitive
-		var widget *widget.Widget
+		var w *widget.Widget
 		if newWidget != nil {
-			widget = newWidget()
-			primitive = widget
+			w = newWidget()
+			primitive = w
 		} else {
-			widget = LoadPlugin(widgetConfig.Name)
-			primitive = widget
+			box := LoadPlugin(widgetConfig.Name, widgetConfig)
+			w = widget.NewWidget(box)
+			primitive = w
 		}
 		grid.AddItem(primitive, widgetConfig.Y+1, widgetConfig.X+1, widgetConfig.Height,
 			widgetConfig.Width, 0, 100, false)
-		widgets = append(widgets, widget)
+		widgets = append(widgets, w)
 	}
 
 	d.widgets = widgets

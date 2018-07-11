@@ -20,6 +20,6 @@ _plugins
 plugins
 tada
 playground
-
+.tada
 
 # End of https://www.gitignore.io/api/go

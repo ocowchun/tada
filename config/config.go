@@ -8,11 +8,12 @@ import (
 )
 
 type WidgetConfig struct {
-	Name   string `json:"name"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-	X      int    `json:"x"`
-	Y      int    `json:"y"`
+	Name    string                 `json:"name"`
+	Width   int                    `json:"width"`
+	Height  int                    `json:"height"`
+	X       int                    `json:"x"`
+	Y       int                    `json:"y"`
+	Options map[string]interface{} `json:"options"`
 }
 
 type Config struct {

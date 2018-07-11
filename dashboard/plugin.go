@@ -5,11 +5,12 @@ import (
 	"os"
 	"plugin"
 
+	tadaConfig "github.com/ocowchun/tada/config"
 	"github.com/ocowchun/tada/utils"
 	widget "github.com/ocowchun/tada/widget"
 )
 
-func LoadPlugin(pluginName string) *widget.Widget {
+func LoadPlugin(pluginName string, config tadaConfig.WidgetConfig) widget.Box {
 	basePath := utils.FindBasePath()
 	mod := basePath + "/so/" + pluginName + ".so"
 	plug, err := plugin.Open(mod)
@@ -17,15 +18,16 @@ func LoadPlugin(pluginName string) *widget.Widget {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	symNewWidget, err := plug.Lookup("NewWidget")
+	symNewBox, err := plug.Lookup("NewBox")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	newWidget, ok := symNewWidget.(func() *widget.Widget)
+	newBox, ok := symNewBox.(func(config tadaConfig.WidgetConfig) widget.Box)
 	if !ok {
 		fmt.Println("unexpected type from module symbol")
 		os.Exit(1)
 	}
-	return newWidget()
+
+	return newBox(config)
 }
