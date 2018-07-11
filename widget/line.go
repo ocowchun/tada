@@ -1,5 +1,7 @@
 package widget
 
+import "github.com/rivo/tview"
+
 type Line struct {
 	sentences []*Sentence
 	Width     int
@@ -32,7 +34,7 @@ func (s *Sentence) len() int {
 }
 
 func (s *Sentence) render(maxLength int) string {
-	text := s.Content
+	text := tview.Escape(s.Content)
 	if s.len() > maxLength {
 		text = s.Content[0:maxLength]
 	}
