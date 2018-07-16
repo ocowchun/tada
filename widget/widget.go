@@ -1,4 +1,4 @@
-package widgets
+package widget
 
 import (
 	"sync"
@@ -7,52 +7,10 @@ import (
 	"github.com/rivo/tview"
 )
 
-type Sentence struct {
-	Content string
-	Color   string
-}
-
-func (s *Sentence) len() int {
-	return len(s.Content)
-}
-
-func (s *Sentence) render(maxLength int) string {
-	text := s.Content
-	if s.len() > maxLength {
-		text = s.Content[0:maxLength]
-	}
-	if s.Color != "" && s.Color != "white" {
-		text = "[" + s.Color + "]" + text + "[white]"
-	}
-	return text
-}
-
-type Line struct {
-	sentences []*Sentence
-	Width     int
-}
-
-func (l *Line) AddSentence(s *Sentence) {
-	l.sentences = append(l.sentences, s)
-}
-
-func (l *Line) String() string {
-	maxWidth := l.Width
-	currentWidth := 0
-	result := ""
-	for _, sentence := range l.sentences {
-		if currentWidth+sentence.len() <= maxWidth {
-			currentWidth = currentWidth + sentence.len()
-			result += sentence.render(sentence.len())
-		}
-	}
-	return result + buildSpace(maxWidth-currentWidth)
-}
-
 type Box interface {
 	Render(width int) []string
-	InputCaptureFactory(render func()) func(event *tcell.EventKey) *tcell.EventKey
-	Focus(delegate func(p tview.Primitive))
+	InputCaptureFactory(render func()) func(event *KeyEvent)
+	Focus()
 	Blur()
 }
 
@@ -93,7 +51,13 @@ func NewWidget(box Box) *Widget {
 		isHover:  false,
 		isFocus:  false,
 	}
-	textView.SetInputCapture(box.InputCaptureFactory(w.Render))
+	inputCapture := func(event *tcell.EventKey) *tcell.EventKey {
+		keyEvent := ConvertEvent(event)
+		box.InputCaptureFactory(w.Render)(keyEvent)
+		return event
+	}
+	textView.SetInputCapture(inputCapture)
+	// textView.SetInputCapture(box.InputCaptureFactory(w.Render))
 	return w
 }
 
@@ -125,7 +89,7 @@ func (w *Widget) Focus(delegate func(p tview.Primitive)) {
 	w.isFocus = true
 	w.textView.Focus(delegate)
 	if w.box.Focus != nil {
-		w.box.Focus(delegate)
+		w.box.Focus()
 	}
 	w.Render()
 }

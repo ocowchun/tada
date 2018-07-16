@@ -12,9 +12,7 @@ import (
 	"time"
 
 	widget "github.com/ocowchun/tada/widget"
-	"github.com/rivo/tview"
 
-	"github.com/gdamore/tcell"
 	ghb "github.com/google/go-github/github"
 	ghbv4 "github.com/shurcooL/githubv4"
 )
@@ -39,7 +37,7 @@ type Issue struct {
 	repositoryName       string
 }
 
-func (w *GitHubWidget) Focus(delegate func(p tview.Primitive)) {
+func (w *GitHubWidget) Focus() {
 	w.isFocus = true
 }
 
@@ -167,11 +165,11 @@ func findHoverIssue(issues []*Issue) int {
 	return -1
 }
 
-func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *tcell.EventKey) *tcell.EventKey {
-	return func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		case tcell.KeyRune:
-			switch event.Rune() {
+func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *widget.KeyEvent) {
+	return func(event *widget.KeyEvent) {
+		switch event.Key {
+		case widget.KeyRune:
+			switch event.Rune {
 			case 'r':
 				w.loading = true
 				render()
@@ -179,7 +177,7 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *tcell.Even
 				w.loading = false
 				render()
 			}
-		case tcell.KeyDown:
+		case widget.KeyDown:
 			issueIdx := findHoverIssue(w.issues)
 			if issueIdx == -1 {
 				w.issues[0].isHover = true
@@ -189,7 +187,7 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *tcell.Even
 				w.issues[newIdx].isHover = true
 			}
 			render()
-		case tcell.KeyUp:
+		case widget.KeyUp:
 			issueIdx := findHoverIssue(w.issues)
 			if issueIdx == -1 {
 				w.issues[0].isHover = true
@@ -199,7 +197,7 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *tcell.Even
 				w.issues[newIdx].isHover = true
 			}
 			render()
-		case tcell.KeyEnter:
+		case widget.KeyEnter:
 			issueIdx := findHoverIssue(w.issues)
 			if issueIdx != -1 {
 				cmd := exec.Command("open", w.issues[issueIdx].url)
@@ -210,8 +208,6 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *tcell.Even
 
 			}
 		}
-
-		return event
 	}
 }
 

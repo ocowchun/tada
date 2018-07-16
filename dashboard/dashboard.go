@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell"
+	tadaConfig "github.com/ocowchun/tada/config"
+	"github.com/ocowchun/tada/utils"
 	widget "github.com/ocowchun/tada/widget"
 	"github.com/ocowchun/tada/widgets/foo"
 	"github.com/ocowchun/tada/widgets/github"
@@ -81,7 +83,9 @@ func inputCaptureFactory(d *Dashboard) func(event *tcell.EventKey) *tcell.EventK
 func (d *Dashboard) Run() {
 	app := tview.NewApplication()
 	d.app = app
-
+	basePath := utils.FindBasePath()
+	path := basePath + "/tada.json"
+	config := tadaConfig.LoadConfig(path)
 	newPrimitive := func(text string) tview.Primitive {
 		view := tview.NewTextView().
 			SetTextAlign(tview.AlignCenter).
@@ -105,37 +109,43 @@ func (d *Dashboard) Run() {
 		SetRows(2, 0, 0, 0, 0, 2).
 		SetBorders(false)
 	// Layout for screens narrower than 100 cells (menu and side bar are hidden).
-	// grid.AddItem(main, 0, 0, 0, 0, 0, 0, false)
 
 	// Layout for screens wider than 100 cells.
-	// grid.AddItem(main, 0, 1, 1, 1, 0, 100, false)
-	// grid.AddItem(widget2, 1, 1, 1, 1, 0, 100, false)
 	pages.AddPage("grid", grid, true, true)
 
-	box1 := github.NewWidget()
-	box2 := foo.NewWidget()
-	// box2 := github.NewWidget()
-	// box3 := github.NewWidget()
-	// box3 := newPrimitive("box3")
-	// box4 := newPrimitive("box4")
-	// box5 := newPrimitive("box5")
+	widgets := []*widget.Widget{}
+	buildinWidgets := map[string]func() *widget.Widget{
+		"tada-github": github.NewWidget,
+		"tada-foo":    foo.NewWidget,
+	}
 
-	grid.AddItem(box2, 1, 1, 1, 1, 0, 100, false)
-	// grid.AddItem(box3, 2, 1, 1, 1, 0, 100, false)
-	// grid.AddItem(box4, 3, 1, 1, 1, 0, 100, false)
-	// grid.AddItem(box5, 4, 1, 1, 1, 0, 100, false)
+	for _, widgetConfig := range config.Widgets {
+		newWidget := buildinWidgets[widgetConfig.Name]
+		var primitive tview.Primitive
+		var w *widget.Widget
+		if newWidget != nil {
+			w = newWidget()
+			primitive = w
+		} else {
+			box := LoadPlugin(widgetConfig.Name, widgetConfig)
+			w = widget.NewWidget(box)
+			primitive = w
+		}
+		grid.AddItem(primitive, widgetConfig.Y+1, widgetConfig.X+1, widgetConfig.Height,
+			widgetConfig.Width, 0, 100, false)
+		widgets = append(widgets, w)
+	}
 
-	grid.AddItem(box1, 2, 2, 2, 3, 0, 100, false)
-
-	// pages.
-	d.widgets = []*widget.Widget{box1, box2}
+	d.widgets = widgets
 	d.widgetIdx = 0
 	app.SetInputCapture(inputCaptureFactory(d))
 	go func() {
+		// without below line, the program will broken = =
+		foo.NewWidget().Render()
 		for {
-			for _, widget := range d.widgets {
-				if !widget.IsRendering() {
-					widget.Render()
+			for _, w := range d.widgets {
+				if !w.IsRendering() {
+					w.Render()
 				}
 			}
 			app.Draw()
