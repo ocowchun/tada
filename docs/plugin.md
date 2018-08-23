@@ -3,7 +3,7 @@
 - [ ] update packages
 
 ### Plugin architecture
-I don't know why but vg fix the plugin issue 
+I don't know why but vg fix the plugin issue
 https://github.com/GetStream/vg
 https://github.com/golang/go/issues/20481
 https://github.com/hashicorp/go-plugin

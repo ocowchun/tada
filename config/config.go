@@ -17,7 +17,7 @@ type WidgetConfig struct {
 }
 
 type Config struct {
-	Widgets []WidgetConfig `json:""widgets""`
+	Widgets []WidgetConfig `json:"widgets"`
 }
 
 func LoadConfig(path string) Config {
