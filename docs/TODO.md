@@ -1,2 +1,3 @@
 - [ ] Using [toml](https://github.com/toml-lang/toml) as configuration.
+- [ ] add init command to create config file
 - [ ] Write document about how to build custom plugin
