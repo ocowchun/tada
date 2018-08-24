@@ -1,11 +1,17 @@
-## Github PR Plugins
+# Github PR Plugins
 Created
 Review requests
 focus on different grid
-display 
+display
 
 I can press `enter` on each item and open it on browser
 
+## TODO
+- [ ] Align PR no matter it has build status or not
+- [ ] Diagnose abnormal exit status
+
+
+## ref
 https://github.com/shurcooL/githubv4
 https://developer.github.com/v4/guides/forming-calls/#the-graphql-endpoint
 https://developer.github.com/v4/object/pullrequestreview/
