@@ -84,7 +84,7 @@ func (d *Dashboard) Run() {
 	app := tview.NewApplication()
 	d.app = app
 	basePath := utils.FindBasePath()
-	path := basePath + "/tada.json"
+	path := basePath + "/tada.toml"
 	config := tadaConfig.LoadConfig(path)
 	newPrimitive := func(text string) tview.Primitive {
 		view := tview.NewTextView().

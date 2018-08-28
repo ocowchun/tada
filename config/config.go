@@ -1,32 +1,37 @@
 package dashboard
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/BurntSushi/toml"
 )
 
-type WidgetConfig struct {
-	Name    string                 `json:"name"`
-	Width   int                    `json:"width"`
-	Height  int                    `json:"height"`
-	X       int                    `json:"x"`
-	Y       int                    `json:"y"`
-	Options map[string]interface{} `json:"options"`
+type Widget struct {
+	Name    string
+	Width   int
+	Height  int
+	X       int
+	Y       int
+	Options map[string]interface{}
 }
 
 type Config struct {
-	Widgets []WidgetConfig `json:"widgets"`
+	Widgets []Widget
 }
 
 func LoadConfig(path string) Config {
+	var config Config
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	var c Config
-	json.Unmarshal(raw, &c)
-	return c
+
+	if _, err = toml.Decode(string(raw), &config); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	return config
 }
