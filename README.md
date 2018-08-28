@@ -12,21 +12,23 @@ $ go get -u github.com/ocowchun/tada
 $ export TADA_GITHUB_TOKEN="your-personal-token"
 $ mkdir ~/.tada
 
-# create tada.json and copy below content into it
-$ touch tada.json
+# create tada.toml and copy below content into it
+$ touch tada.toml
 ```
 
-### tada.json
-```js
-{
-  "widgets": [{
-      "name": "tada-github",
-      "width": 3,
-      "height": 3,
-      "x": 1,
-      "y":0
-    }]
-}
+### tada.toml
+```toml
+[[widgets]]
+# widget name
+name = "tada-github"
+# widget width
+width = 3
+# widget height
+height = 3
+# widget x-axis
+x = 1
+# widget y-axis
+y = 0
 ```
 
 ### Expected Widget
