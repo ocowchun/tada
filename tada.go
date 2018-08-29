@@ -70,6 +70,7 @@ func main() {
 		"install": command.InstallCommandFactory,
 		"link":    command.LinkCommandFactory,
 		"test":    testCommandFactory,
+		"init":    command.InitCommandFactory,
 	}
 
 	exitStatus, err := c.Run()

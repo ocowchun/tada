@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell"
-	tadaConfig "github.com/ocowchun/tada/config"
+	// tadaConfig "github.com/ocowchun/tada/config"
 	"github.com/ocowchun/tada/utils"
 	widget "github.com/ocowchun/tada/widget"
 	"github.com/ocowchun/tada/widgets/foo"
@@ -84,8 +84,8 @@ func (d *Dashboard) Run() {
 	app := tview.NewApplication()
 	d.app = app
 	basePath := utils.FindBasePath()
-	path := basePath + "/tada.json"
-	config := tadaConfig.LoadConfig(path)
+	path := basePath + "/tada.toml"
+	config := LoadConfig(path)
 	newPrimitive := func(text string) tview.Primitive {
 		view := tview.NewTextView().
 			SetTextAlign(tview.AlignCenter).

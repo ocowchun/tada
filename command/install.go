@@ -17,7 +17,7 @@ type InstallCommand struct {
 }
 
 func (*InstallCommand) Help() string {
-	return "Sorry, there're no help"
+	return "Install tada package"
 }
 
 func (*InstallCommand) Run(args []string) int {
