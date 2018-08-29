@@ -6,19 +6,11 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/ocowchun/tada/widget"
 )
 
-type Widget struct {
-	Name    string
-	Width   int
-	Height  int
-	X       int
-	Y       int
-	Options map[string]interface{}
-}
-
 type Config struct {
-	Widgets []Widget
+	Widgets []widget.Config
 }
 
 func LoadConfig(path string) Config {
