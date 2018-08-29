@@ -9,7 +9,7 @@ type FooCommand struct {
 }
 
 func (*FooCommand) Help() string {
-	return "Sorry, there no help"
+	return "Run tada dashboard, you must run `tada init` to create config first."
 }
 
 func (*FooCommand) Run(args []string) int {

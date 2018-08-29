@@ -14,7 +14,7 @@ type LinkCommand struct {
 }
 
 func (*LinkCommand) Help() string {
-	return "Sorry, there're no help"
+	return "Copy .so file to tada folder"
 }
 
 // CopyFile copies a file from src to dst. If src and dst files exist, and are
