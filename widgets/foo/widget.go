@@ -36,7 +36,7 @@ func (w *FooWidget) Render(width int) []string {
 	return strs
 }
 
-func NewWidget() *widget.Widget {
+func NewWidget(config widget.Config) *widget.Widget {
 	box := &FooWidget{}
 	widget := widget.NewWidget(box)
 	return widget

@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	widget "github.com/ocowchun/tada/widget"
@@ -18,12 +17,14 @@ import (
 )
 
 type GitHubWidget struct {
-	isHover bool
-	isFocus bool
-	width   int
-	height  int
-	issues  []*Issue
-	loading bool
+	isHover        bool
+	isFocus        bool
+	width          int
+	height         int
+	issues         []*Issue
+	loading        bool
+	githubUsername string
+	githubToken    string
 }
 
 type Issue struct {
@@ -173,7 +174,7 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *widget.Key
 			case 'r':
 				w.loading = true
 				render()
-				w.issues = fetchPullRequestsWithGraphQL(initGithubV4Client())
+				w.issues = fetchPullRequestsWithGraphQL(w.initGithubV4Client())
 				w.loading = false
 				render()
 			}
@@ -211,12 +212,10 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *widget.Key
 	}
 }
 
-func initGithubV4Client() *ghbv4.Client {
-	username := os.Getenv("TADA_GITHUB_USERNAME")
-	password := os.Getenv("TADA_GITHUB_TOKEN")
+func (w *GitHubWidget) initGithubV4Client() *ghbv4.Client {
 	tp := &ghb.BasicAuthTransport{
-		Username: username,
-		Password: password,
+		Username: w.githubUsername,
+		Password: w.githubToken,
 	}
 	client := ghbv4.NewClient(tp.Client())
 	return client
@@ -390,29 +389,23 @@ func computeReviewStatus(pr PullRequest, authorUsername string) map[ghbv4.PullRe
 	return stateCountMap
 }
 
-func fetchPullRequests(client *ghb.Client) []*Issue {
-	q := "author:ocowchun type:pr state:open"
-	opts := &ghb.SearchOptions{}
-	result, _, err := client.Search.Issues(context.Background(), q, opts)
-	if err != nil {
-		fmt.Println("Search.Repositories returned error: ", err)
+func getStringFromConfig(config widget.Config, name string) string {
+	str, ok := config.Options[name].(string)
+	if !ok {
+		fmt.Println(fmt.Sprintf("You must provide %v for tada-github", name))
+		os.Exit(1)
 	}
-	issues := []*Issue{}
-	for _, issue := range result.Issues {
-		strs := strings.Split(issue.GetRepositoryURL(), "/")
-		repoName := strs[len(strs)-1]
-		i := &Issue{
-			title:   repoName + "/" + issue.GetTitle(),
-			isHover: false,
-			url:     issue.GetHTMLURL(),
-		}
-		issues = append(issues, i)
-	}
-	return issues
+	return str
 }
 
-func NewWidget() *widget.Widget {
-	box := &GitHubWidget{loading: true}
+func NewWidget(config widget.Config) *widget.Widget {
+	githubUsername := getStringFromConfig(config, "GITHUB_USERNAME")
+	githubToken := getStringFromConfig(config, "GITHUB_TOKEN")
+	box := &GitHubWidget{
+		loading:        true,
+		githubUsername: githubUsername,
+		githubToken:    githubToken,
+	}
 	widget := widget.NewWidget(box)
 
 	issues := []*Issue{}
@@ -420,7 +413,7 @@ func NewWidget() *widget.Widget {
 	refreshInterval := 120
 	go func() {
 		for {
-			box.issues = fetchPullRequestsWithGraphQL(initGithubV4Client())
+			box.issues = fetchPullRequestsWithGraphQL(box.initGithubV4Client())
 			box.loading = false
 			widget.Render()
 			time.Sleep(time.Duration(refreshInterval) * time.Second)

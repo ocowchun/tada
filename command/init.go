@@ -36,13 +36,14 @@ func (*InitCommand) Run(args []string) int {
 	defer f.Close()
 
 	opts := make(map[string]interface{})
+	opts["GITHUB_USERNAME"] = "your-github-username"
 	opts["GITHUB_TOKEN"] = "your-github-developer-token"
 	w := widget.Config{
 		Name:    "tada-github",
 		Width:   3,
 		Height:  3,
 		X:       1,
-		Y:       1,
+		Y:       0,
 		Options: opts,
 	}
 	config := dashboard.Config{
