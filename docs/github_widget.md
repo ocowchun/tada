@@ -8,7 +8,6 @@ I can press `enter` on each item and open it on browser
 
 ## TODO
 - [ ] handle 401 issue
-- [ ] Align PR no matter it has build status or not
 - [ ] Diagnose abnormal exit status
 
 

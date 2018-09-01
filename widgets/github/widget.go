@@ -103,6 +103,7 @@ func (w *GitHubWidget) Render(width int) []string {
 			line := &widget.Line{
 				Width: width,
 			}
+
 			switch issue.status {
 			case ghbv4.StatusStateSuccess:
 				line.AddSentence(&widget.Sentence{Content: "V ", Color: "green"})
@@ -110,7 +111,8 @@ func (w *GitHubWidget) Render(width int) []string {
 				line.AddSentence(&widget.Sentence{Content: "O ", Color: "yellow"})
 			case ghbv4.StatusStateFailure:
 				line.AddSentence(&widget.Sentence{Content: "X ", Color: "red"})
-
+			case "":
+				line.AddSentence(&widget.Sentence{Content: "  ", Color: "white"})
 			}
 
 			titleColor := "white"
