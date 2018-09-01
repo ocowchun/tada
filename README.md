@@ -9,11 +9,12 @@
 ## Install
 ```sh
 $ go get -u github.com/ocowchun/tada
-$ export TADA_GITHUB_TOKEN="your-personal-token"
-$ mkdir ~/.tada
 
-# create tada.toml and copy below content into it
-$ touch tada.toml
+# Initialize tada required config
+$ tada init
+
+# Go to config folder and write config using your favorite editor
+$ cd ~/.tada/
 ```
 
 ### tada.toml
@@ -29,6 +30,9 @@ height = 3
 x = 1
 # widget y-axis
 y = 0
+  [Widgets.Options]
+    GITHUB_USERNAME = "your-github-username"
+    GITHUB_TOKEN = "your-github-developer-token"
 ```
 
 ### Expected Widget

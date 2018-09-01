@@ -394,7 +394,7 @@ func computeReviewStatus(pr PullRequest, authorUsername string) map[ghbv4.PullRe
 func getStringFromConfig(config widget.Config, name string) string {
 	str, ok := config.Options[name].(string)
 	if !ok {
-		fmt.Println(fmt.Sprintf("You must provide %v for tada-github", name))
+		fmt.Println(fmt.Sprintf("You must provide %v in tada.toml for tada-github", name))
 		os.Exit(1)
 	}
 	return str
