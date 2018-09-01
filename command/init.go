@@ -28,20 +28,23 @@ func (*InitCommand) Run(args []string) int {
 	}
 
 	path := basePath + "/tada.toml"
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0711)
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
 		log.Fatalln(err)
 		os.Exit(1)
 	}
 	defer f.Close()
 
+	opts := make(map[string]interface{})
+	opts["GITHUB_USERNAME"] = "your-github-username"
+	opts["GITHUB_TOKEN"] = "your-github-developer-token"
 	w := widget.Config{
 		Name:    "tada-github",
 		Width:   3,
 		Height:  3,
 		X:       1,
-		Y:       1,
-		Options: make(map[string]interface{}),
+		Y:       0,
+		Options: opts,
 	}
 	config := dashboard.Config{
 		Widgets: []widget.Config{w},

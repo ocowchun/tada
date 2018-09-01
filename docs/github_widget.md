@@ -7,7 +7,7 @@ display
 I can press `enter` on each item and open it on browser
 
 ## TODO
-- [ ] Align PR no matter it has build status or not
+- [ ] handle 401 issue
 - [ ] Diagnose abnormal exit status
 
 

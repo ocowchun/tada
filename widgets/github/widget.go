@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	widget "github.com/ocowchun/tada/widget"
@@ -18,12 +17,15 @@ import (
 )
 
 type GitHubWidget struct {
-	isHover bool
-	isFocus bool
-	width   int
-	height  int
-	issues  []*Issue
-	loading bool
+	isHover        bool
+	isFocus        bool
+	width          int
+	height         int
+	issues         []*Issue
+	loading        bool
+	githubUsername string
+	githubToken    string
+	stopApp        func()
 }
 
 type Issue struct {
@@ -101,6 +103,7 @@ func (w *GitHubWidget) Render(width int) []string {
 			line := &widget.Line{
 				Width: width,
 			}
+
 			switch issue.status {
 			case ghbv4.StatusStateSuccess:
 				line.AddSentence(&widget.Sentence{Content: "V ", Color: "green"})
@@ -108,7 +111,8 @@ func (w *GitHubWidget) Render(width int) []string {
 				line.AddSentence(&widget.Sentence{Content: "O ", Color: "yellow"})
 			case ghbv4.StatusStateFailure:
 				line.AddSentence(&widget.Sentence{Content: "X ", Color: "red"})
-
+			case "":
+				line.AddSentence(&widget.Sentence{Content: "  ", Color: "white"})
 			}
 
 			titleColor := "white"
@@ -173,7 +177,7 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *widget.Key
 			case 'r':
 				w.loading = true
 				render()
-				w.issues = fetchPullRequestsWithGraphQL(initGithubV4Client())
+				w.issues = w.fetchPullRequestsWithGraphQL(w.initGithubV4Client())
 				w.loading = false
 				render()
 			}
@@ -211,12 +215,10 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *widget.Key
 	}
 }
 
-func initGithubV4Client() *ghbv4.Client {
-	username := os.Getenv("TADA_GITHUB_USERNAME")
-	password := os.Getenv("TADA_GITHUB_TOKEN")
+func (w *GitHubWidget) initGithubV4Client() *ghbv4.Client {
 	tp := &ghb.BasicAuthTransport{
-		Username: username,
-		Password: password,
+		Username: w.githubUsername,
+		Password: w.githubToken,
 	}
 	client := ghbv4.NewClient(tp.Client())
 	return client
@@ -269,8 +271,7 @@ type PullRequest struct {
 	} `graphql:"reviews(last: 10)"`
 }
 
-func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
-
+func (w *GitHubWidget) fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 	var query struct {
 		Viewer struct {
 			Login        string
@@ -284,7 +285,9 @@ func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 
 	err := client.Query(context.Background(), &query, nil)
 	if err != nil {
-		fmt.Println(err)
+		w.stopApp()
+		fmt.Println("perform query failed:")
+		fmt.Println(err.Error())
 	}
 	issues := []*Issue{}
 	for _, pr := range query.Viewer.PullRequests.Nodes {
@@ -390,29 +393,24 @@ func computeReviewStatus(pr PullRequest, authorUsername string) map[ghbv4.PullRe
 	return stateCountMap
 }
 
-func fetchPullRequests(client *ghb.Client) []*Issue {
-	q := "author:ocowchun type:pr state:open"
-	opts := &ghb.SearchOptions{}
-	result, _, err := client.Search.Issues(context.Background(), q, opts)
-	if err != nil {
-		fmt.Println("Search.Repositories returned error: ", err)
+func getStringFromConfig(config widget.Config, name string) string {
+	str, ok := config.Options[name].(string)
+	if !ok {
+		fmt.Println(fmt.Sprintf("You must provide %v in tada.toml for tada-github", name))
+		os.Exit(1)
 	}
-	issues := []*Issue{}
-	for _, issue := range result.Issues {
-		strs := strings.Split(issue.GetRepositoryURL(), "/")
-		repoName := strs[len(strs)-1]
-		i := &Issue{
-			title:   repoName + "/" + issue.GetTitle(),
-			isHover: false,
-			url:     issue.GetHTMLURL(),
-		}
-		issues = append(issues, i)
-	}
-	return issues
+	return str
 }
 
-func NewWidget() *widget.Widget {
-	box := &GitHubWidget{loading: true}
+func NewWidget(config widget.Config, stopApp func()) *widget.Widget {
+	githubUsername := getStringFromConfig(config, "GITHUB_USERNAME")
+	githubToken := getStringFromConfig(config, "GITHUB_TOKEN")
+	box := &GitHubWidget{
+		loading:        true,
+		githubUsername: githubUsername,
+		githubToken:    githubToken,
+		stopApp:        stopApp,
+	}
 	widget := widget.NewWidget(box)
 
 	issues := []*Issue{}
@@ -420,7 +418,7 @@ func NewWidget() *widget.Widget {
 	refreshInterval := 120
 	go func() {
 		for {
-			box.issues = fetchPullRequestsWithGraphQL(initGithubV4Client())
+			box.issues = box.fetchPullRequestsWithGraphQL(box.initGithubV4Client())
 			box.loading = false
 			widget.Render()
 			time.Sleep(time.Duration(refreshInterval) * time.Second)

@@ -114,7 +114,7 @@ func (d *Dashboard) Run() {
 	pages.AddPage("grid", grid, true, true)
 
 	widgets := []*widget.Widget{}
-	buildinWidgets := map[string]func() *widget.Widget{
+	buildinWidgets := map[string]func(config widget.Config, stop func()) *widget.Widget{
 		"tada-github": github.NewWidget,
 		"tada-foo":    foo.NewWidget,
 	}
@@ -124,7 +124,7 @@ func (d *Dashboard) Run() {
 		var primitive tview.Primitive
 		var w *widget.Widget
 		if newWidget != nil {
-			w = newWidget()
+			w = newWidget(widgetConfig, app.Stop)
 			primitive = w
 		} else {
 			box := LoadPlugin(widgetConfig.Name, widgetConfig)
@@ -141,7 +141,7 @@ func (d *Dashboard) Run() {
 	app.SetInputCapture(inputCaptureFactory(d))
 	go func() {
 		// without below line, the program will broken = =
-		foo.NewWidget().Render()
+		// foo.NewWidget().Render()
 		for {
 			for _, w := range d.widgets {
 				if !w.IsRendering() {
