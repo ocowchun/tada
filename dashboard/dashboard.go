@@ -114,7 +114,7 @@ func (d *Dashboard) Run() {
 	pages.AddPage("grid", grid, true, true)
 
 	widgets := []*widget.Widget{}
-	buildinWidgets := map[string]func(config widget.Config) *widget.Widget{
+	buildinWidgets := map[string]func(config widget.Config, stop func()) *widget.Widget{
 		"tada-github": github.NewWidget,
 		"tada-foo":    foo.NewWidget,
 	}
@@ -124,7 +124,7 @@ func (d *Dashboard) Run() {
 		var primitive tview.Primitive
 		var w *widget.Widget
 		if newWidget != nil {
-			w = newWidget(widgetConfig)
+			w = newWidget(widgetConfig, app.Stop)
 			primitive = w
 		} else {
 			box := LoadPlugin(widgetConfig.Name, widgetConfig)

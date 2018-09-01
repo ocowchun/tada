@@ -25,6 +25,7 @@ type GitHubWidget struct {
 	loading        bool
 	githubUsername string
 	githubToken    string
+	stopApp        func()
 }
 
 type Issue struct {
@@ -174,7 +175,7 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *widget.Key
 			case 'r':
 				w.loading = true
 				render()
-				w.issues = fetchPullRequestsWithGraphQL(w.initGithubV4Client())
+				w.issues = w.fetchPullRequestsWithGraphQL(w.initGithubV4Client())
 				w.loading = false
 				render()
 			}
@@ -268,8 +269,7 @@ type PullRequest struct {
 	} `graphql:"reviews(last: 10)"`
 }
 
-func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
-
+func (w *GitHubWidget) fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 	var query struct {
 		Viewer struct {
 			Login        string
@@ -283,7 +283,9 @@ func fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
 
 	err := client.Query(context.Background(), &query, nil)
 	if err != nil {
-		fmt.Println(err)
+		w.stopApp()
+		fmt.Println("perform query failed:")
+		fmt.Println(err.Error())
 	}
 	issues := []*Issue{}
 	for _, pr := range query.Viewer.PullRequests.Nodes {
@@ -398,13 +400,14 @@ func getStringFromConfig(config widget.Config, name string) string {
 	return str
 }
 
-func NewWidget(config widget.Config) *widget.Widget {
+func NewWidget(config widget.Config, stopApp func()) *widget.Widget {
 	githubUsername := getStringFromConfig(config, "GITHUB_USERNAME")
 	githubToken := getStringFromConfig(config, "GITHUB_TOKEN")
 	box := &GitHubWidget{
 		loading:        true,
 		githubUsername: githubUsername,
 		githubToken:    githubToken,
+		stopApp:        stopApp,
 	}
 	widget := widget.NewWidget(box)
 
@@ -413,7 +416,7 @@ func NewWidget(config widget.Config) *widget.Widget {
 	refreshInterval := 120
 	go func() {
 		for {
-			box.issues = fetchPullRequestsWithGraphQL(box.initGithubV4Client())
+			box.issues = box.fetchPullRequestsWithGraphQL(box.initGithubV4Client())
 			box.loading = false
 			widget.Render()
 			time.Sleep(time.Duration(refreshInterval) * time.Second)
