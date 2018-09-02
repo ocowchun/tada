@@ -43,7 +43,6 @@ func (w *Widget) IsRendering() bool {
 func NewWidget(box Box) *Widget {
 	textView := tview.NewTextView()
 	textView.SetDynamicColors(true)
-	// box1.SetBorder(false)
 
 	w := &Widget{
 		box:      box,
@@ -57,7 +56,6 @@ func NewWidget(box Box) *Widget {
 		return event
 	}
 	textView.SetInputCapture(inputCapture)
-	// textView.SetInputCapture(box.InputCaptureFactory(w.Render))
 	return w
 }
 

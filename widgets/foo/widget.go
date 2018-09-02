@@ -4,23 +4,23 @@ import (
 	widget "github.com/ocowchun/tada/widget"
 )
 
-type FooWidget struct {
+type FooBox struct {
 	isFocus bool
 }
 
-func (w *FooWidget) Focus() {
+func (w *FooBox) Focus() {
 	w.isFocus = true
 }
 
-func (w *FooWidget) Blur() {
+func (w *FooBox) Blur() {
 	w.isFocus = false
 }
 
-func (w *FooWidget) InputCaptureFactory(render func()) func(event *widget.KeyEvent) {
+func (w *FooBox) InputCaptureFactory(render func()) func(event *widget.KeyEvent) {
 	return nil
 }
 
-func (w *FooWidget) Render(width int) []string {
+func (w *FooBox) Render(width int) []string {
 	strs := []string{}
 	max := 3
 	for i := 0; i < max; i++ {
@@ -37,7 +37,7 @@ func (w *FooWidget) Render(width int) []string {
 }
 
 func NewWidget(config widget.Config, stopApp func()) *widget.Widget {
-	box := &FooWidget{}
+	box := &FooBox{}
 	widget := widget.NewWidget(box)
 	return widget
 }

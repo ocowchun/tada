@@ -14,7 +14,7 @@ import (
 	ghbv4 "github.com/shurcooL/githubv4"
 )
 
-type GitHubWidget struct {
+type GitHubBox struct {
 	isHover        bool
 	isFocus        bool
 	width          int
@@ -37,11 +37,11 @@ type PullRequest struct {
 	repositoryName       string
 }
 
-func (w *GitHubWidget) Focus() {
+func (w *GitHubBox) Focus() {
 	w.isFocus = true
 }
 
-func (w *GitHubWidget) Blur() {
+func (w *GitHubBox) Blur() {
 	w.isFocus = false
 	issueIdx := findHoverIssue(w.issues)
 	if issueIdx != -1 {
@@ -49,15 +49,15 @@ func (w *GitHubWidget) Blur() {
 	}
 }
 
-func (w *GitHubWidget) Hover() {
+func (w *GitHubBox) Hover() {
 	w.isHover = true
 }
 
-func (w *GitHubWidget) Unhover() {
+func (w *GitHubBox) Unhover() {
 	w.isHover = false
 }
 
-func (w *GitHubWidget) Render(width int) []string {
+func (w *GitHubBox) Render(width int) []string {
 	lines := []string{}
 	if w.loading {
 		line := &widget.Line{
@@ -138,7 +138,7 @@ func findHoverIssue(issues []*PullRequest) int {
 	return -1
 }
 
-func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *widget.KeyEvent) {
+func (w *GitHubBox) InputCaptureFactory(render func()) func(event *widget.KeyEvent) {
 	return func(event *widget.KeyEvent) {
 		switch event.Key {
 		case widget.KeyRune:
@@ -184,7 +184,7 @@ func (w *GitHubWidget) InputCaptureFactory(render func()) func(event *widget.Key
 	}
 }
 
-func (w *GitHubWidget) initGithubV4Client() *ghbv4.Client {
+func (w *GitHubBox) initGithubV4Client() *ghbv4.Client {
 	tp := &ghb.BasicAuthTransport{
 		Username: w.githubUsername,
 		Password: w.githubToken,
@@ -193,7 +193,7 @@ func (w *GitHubWidget) initGithubV4Client() *ghbv4.Client {
 	return client
 }
 
-func (w *GitHubWidget) fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*PullRequest {
+func (w *GitHubBox) fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*PullRequest {
 	issues, err := FetchPullRequestsWithGraphQL(client)
 	if err != nil {
 		w.stopApp()
@@ -215,7 +215,7 @@ func getStringFromConfig(config widget.Config, name string) string {
 func NewWidget(config widget.Config, stopApp func()) *widget.Widget {
 	githubUsername := getStringFromConfig(config, "GITHUB_USERNAME")
 	githubToken := getStringFromConfig(config, "GITHUB_TOKEN")
-	box := &GitHubWidget{
+	box := &GitHubBox{
 		loading:        true,
 		githubUsername: githubUsername,
 		githubToken:    githubToken,
