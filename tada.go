@@ -63,7 +63,7 @@ func testCommandFactory() (cli.Command, error) {
 }
 
 func main() {
-	c := cli.NewCLI("app", "0.0.2")
+	c := cli.NewCLI("app", "0.0.3")
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
 		"run":     command.RunCommandFactory,
