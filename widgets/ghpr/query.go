@@ -16,10 +16,6 @@ type ReviewRequestedEvent struct {
 		} `graphql:"... on User"`
 	}
 }
-type TimelineItem struct {
-	Typename string               `graphql:"typename :__typename"`
-	Event    ReviewRequestedEvent `graphql:"... on ReviewRequestedEvent"`
-}
 
 type GhPullRequest struct {
 	Title    string

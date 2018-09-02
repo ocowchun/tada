@@ -3,6 +3,7 @@ package util
 import (
 	"sort"
 
+	ghb "github.com/google/go-github/github"
 	ghbv4 "github.com/shurcooL/githubv4"
 )
 
@@ -41,23 +42,6 @@ type GhTimelineItem struct {
 	Typename string               `graphql:"typename :__typename"`
 	Event    ReviewRequestedEvent `graphql:"... on ReviewRequestedEvent"`
 }
-
-// type PullRequest struct {
-// 	Title    string
-// 	Url      ghbv4.URI
-// 	Timeline struct {
-// 		Nodes []TimelineItem
-// 	} `graphql:"timeline(last:5)"`
-// 	Repository struct {
-// 		Name string
-// 	}
-// 	Commits struct {
-// 		Nodes []GhCommit
-// 	} `graphql:"commits(last:1)"`
-// 	Reviews struct {
-// 		Nodes []GhReview
-// 	} `graphql:"reviews(last: 10)"`
-// }
 
 type ByCreatedAt []ReviewEvent
 
@@ -124,4 +108,13 @@ func ComputeReviewStatus(timelineItems []GhTimelineItem, reviews []GhReview, aut
 	}
 
 	return stateCountMap
+}
+
+func InitGithubV4Client(username string, password string) *ghbv4.Client {
+	tp := &ghb.BasicAuthTransport{
+		Username: username,
+		Password: password,
+	}
+	client := ghbv4.NewClient(tp.Client())
+	return client
 }

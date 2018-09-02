@@ -194,13 +194,13 @@ func (w *GitHubBox) initGithubV4Client() *ghbv4.Client {
 }
 
 func (w *GitHubBox) fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*PullRequest {
-	issues, err := FetchPullRequestsWithGraphQL(client)
+	pullRequests, err := FetchPullRequestsWithGraphQL(client)
 	if err != nil {
 		w.stopApp()
 		fmt.Println("perform query failed:")
 		fmt.Println(err.Error())
 	}
-	return issues
+	return pullRequests
 }
 
 func getStringFromConfig(config widget.Config, name string) string {

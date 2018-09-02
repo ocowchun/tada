@@ -10,6 +10,7 @@ import (
 	widget "github.com/ocowchun/tada/widget"
 	"github.com/ocowchun/tada/widgets/foo"
 	"github.com/ocowchun/tada/widgets/ghpr"
+	"github.com/ocowchun/tada/widgets/ghreview"
 	"github.com/rivo/tview"
 )
 
@@ -115,8 +116,9 @@ func (d *Dashboard) Run() {
 
 	widgets := []*widget.Widget{}
 	buildinWidgets := map[string]func(config widget.Config, stop func()) *widget.Widget{
-		"tada-github": ghpr.NewWidget,
-		"tada-foo":    foo.NewWidget,
+		"tada-github":        ghpr.NewWidget,
+		"tada-github-review": ghreview.NewWidget,
+		"tada-foo":           foo.NewWidget,
 	}
 
 	for _, widgetConfig := range config.Widgets {
