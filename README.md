@@ -21,7 +21,7 @@ $ cd ~/.tada/
 ```toml
 [[widgets]]
 # widget name
-name = "tada-github"
+name = "tada-github-pr"
 # widget width
 width = 3
 # widget height

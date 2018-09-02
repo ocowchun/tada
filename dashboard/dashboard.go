@@ -9,7 +9,8 @@ import (
 	"github.com/ocowchun/tada/utils"
 	widget "github.com/ocowchun/tada/widget"
 	"github.com/ocowchun/tada/widgets/foo"
-	"github.com/ocowchun/tada/widgets/github"
+	"github.com/ocowchun/tada/widgets/ghpr"
+	"github.com/ocowchun/tada/widgets/ghreview"
 	"github.com/rivo/tview"
 )
 
@@ -46,21 +47,32 @@ type WithBox interface {
 }
 
 func inputCaptureFactory(d *Dashboard) func(event *tcell.EventKey) *tcell.EventKey {
+	firstTime := true
 	return func(event *tcell.EventKey) *tcell.EventKey {
 		if d.hasFocusWidget == false {
 			switch event.Key() {
 			case tcell.KeyRight:
 				oldIdx := d.widgetIdx
-				d.widgetIdx = d.widgetIdx + 1
-				if d.widgetIdx >= len(d.widgets) {
+				if firstTime {
 					d.widgetIdx = 0
+					firstTime = false
+				} else {
+					d.widgetIdx = d.widgetIdx + 1
+					if d.widgetIdx >= len(d.widgets) {
+						d.widgetIdx = 0
+					}
 				}
 				d.hover(oldIdx, d.widgetIdx)
 			case tcell.KeyLeft:
 				oldIdx := d.widgetIdx
-				d.widgetIdx = d.widgetIdx - 1
-				if d.widgetIdx < 0 {
-					d.widgetIdx = len(d.widgets) - 1
+				if firstTime {
+					d.widgetIdx = 0
+					firstTime = false
+				} else {
+					d.widgetIdx = d.widgetIdx - 1
+					if d.widgetIdx < 0 {
+						d.widgetIdx = len(d.widgets) - 1
+					}
 				}
 				d.hover(oldIdx, d.widgetIdx)
 			case tcell.KeyEnter:
@@ -86,24 +98,9 @@ func (d *Dashboard) Run() {
 	basePath := utils.FindBasePath()
 	path := basePath + "/tada.toml"
 	config := LoadConfig(path)
-	newPrimitive := func(text string) tview.Primitive {
-		view := tview.NewTextView().
-			SetTextAlign(tview.AlignCenter).
-			SetText(text)
-		view.SetBorder(true)
-		view.SetDynamicColors(true)
-		view.SetBorderColor(tcell.ColorDarkRed)
-		fmt.Fprintf(view, "%s ", "[red]the[white]")
-		return view
-	}
-
 	pages := tview.NewPages()
 
-	widget2 := tview.NewGrid().
-		SetBorders(true)
-	widget2.SetBorderColor(tcell.ColorYellow)
-	widget2.AddItem(newPrimitive("widget2 Header"), 0, 0, 4, 3, 0, 0, false)
-
+	// 6*4
 	grid := tview.NewGrid().
 		SetColumns(2, 0, 0, 0, 0, 0, 0, 2).
 		SetRows(2, 0, 0, 0, 0, 2).
@@ -115,8 +112,9 @@ func (d *Dashboard) Run() {
 
 	widgets := []*widget.Widget{}
 	buildinWidgets := map[string]func(config widget.Config, stop func()) *widget.Widget{
-		"tada-github": github.NewWidget,
-		"tada-foo":    foo.NewWidget,
+		"tada-github-pr":     ghpr.NewWidget,
+		"tada-github-review": ghreview.NewWidget,
+		"tada-foo":           foo.NewWidget,
 	}
 
 	for _, widgetConfig := range config.Widgets {
@@ -125,6 +123,7 @@ func (d *Dashboard) Run() {
 		var w *widget.Widget
 		if newWidget != nil {
 			w = newWidget(widgetConfig, app.Stop)
+			w.Title = widgetConfig.Title
 			primitive = w
 		} else {
 			box := LoadPlugin(widgetConfig.Name, widgetConfig)

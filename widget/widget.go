@@ -1,6 +1,7 @@
 package widget
 
 import (
+	"math"
 	"sync"
 
 	"github.com/gdamore/tcell"
@@ -26,6 +27,7 @@ func (w *Widget) Unhover() {
 
 type Widget struct {
 	box        Box
+	Title      string
 	textView   *tview.TextView
 	isHover    bool
 	isFocus    bool
@@ -43,7 +45,6 @@ func (w *Widget) IsRendering() bool {
 func NewWidget(box Box) *Widget {
 	textView := tview.NewTextView()
 	textView.SetDynamicColors(true)
-	// box1.SetBorder(false)
 
 	w := &Widget{
 		box:      box,
@@ -57,7 +58,6 @@ func NewWidget(box Box) *Widget {
 		return event
 	}
 	textView.SetInputCapture(inputCapture)
-	// textView.SetInputCapture(box.InputCaptureFactory(w.Render))
 	return w
 }
 
@@ -125,6 +125,18 @@ func buildLine(text string, width int) string {
 	}
 }
 
+func newTitleLine(title string, length int) string {
+	titleLength := len(title)
+	if titleLength >= length {
+		return title[0:length]
+	} else {
+		l := float64(length - titleLength)
+		leftLength := int(math.Ceil(l / float64(2)))
+		rightLength := int(math.Floor(l / float64(2)))
+		return newHorizontalLine(leftLength) + title + newHorizontalLine(rightLength)
+	}
+}
+
 func newHorizontalLine(length int) string {
 	line := ""
 	max := length / 2
@@ -150,14 +162,17 @@ func (w *Widget) Render() {
 		lines := w.box.Render(w.width - 3)
 		leftBorder := " |"
 		rightBorder := "|"
+		titleLine := " +" + newTitleLine(w.Title, width-3) + "+"
 		horizontalLine := " +" + newHorizontalLine(width-3) + "+"
 
 		if w.isFocus {
-			horizontalLine = "[green] +" + newHorizontalLine(width-3) + "+[white]"
+			titleLine = "[green]" + titleLine + "[white]"
+			horizontalLine = "[green]" + horizontalLine + "[white]"
 			leftBorder = "[green] |[white]"
 			rightBorder = "[green]|[white]"
 		} else if w.isHover {
-			horizontalLine = "[yellow] +" + newHorizontalLine(width-3) + "+[white]"
+			titleLine = "[yellow]" + titleLine + "[white]"
+			horizontalLine = "[yellow]" + horizontalLine + "[white]"
 			leftBorder = "[yellow] |[white]"
 			rightBorder = "[yellow]|[white]"
 		}
@@ -170,7 +185,7 @@ func (w *Widget) Render() {
 				lines = append(lines, buildLine("", width-3))
 			}
 		}
-		text := horizontalLine
+		text := titleLine
 
 		for i := 0; i < len(lines); i++ {
 			text += leftBorder + lines[i] + rightBorder
