@@ -116,7 +116,7 @@ func (d *Dashboard) Run() {
 
 	widgets := []*widget.Widget{}
 	buildinWidgets := map[string]func(config widget.Config, stop func()) *widget.Widget{
-		"tada-github":        ghpr.NewWidget,
+		"tada-github-pr":     ghpr.NewWidget,
 		"tada-github-review": ghreview.NewWidget,
 		"tada-foo":           foo.NewWidget,
 	}

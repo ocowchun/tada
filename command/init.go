@@ -39,7 +39,7 @@ func (*InitCommand) Run(args []string) int {
 	opts["GITHUB_USERNAME"] = "your-github-username"
 	opts["GITHUB_TOKEN"] = "your-github-developer-token"
 	w := widget.Config{
-		Name:    "tada-github",
+		Name:    "tada-github-pr",
 		Width:   3,
 		Height:  3,
 		X:       1,
