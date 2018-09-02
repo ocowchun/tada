@@ -19,14 +19,14 @@ type GitHubWidget struct {
 	isFocus        bool
 	width          int
 	height         int
-	issues         []*Issue
+	issues         []*PullRequest
 	loading        bool
 	githubUsername string
 	githubToken    string
 	stopApp        func()
 }
 
-type Issue struct {
+type PullRequest struct {
 	title                string
 	isHover              bool
 	url                  string
@@ -129,7 +129,7 @@ func (w *GitHubWidget) Render(width int) []string {
 	return lines
 }
 
-func findHoverIssue(issues []*Issue) int {
+func findHoverIssue(issues []*PullRequest) int {
 	for i := 0; i < len(issues); i++ {
 		if issues[i].isHover {
 			return i
@@ -193,7 +193,7 @@ func (w *GitHubWidget) initGithubV4Client() *ghbv4.Client {
 	return client
 }
 
-func (w *GitHubWidget) fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*Issue {
+func (w *GitHubWidget) fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*PullRequest {
 	issues, err := FetchPullRequestsWithGraphQL(client)
 	if err != nil {
 		w.stopApp()
@@ -223,7 +223,7 @@ func NewWidget(config widget.Config, stopApp func()) *widget.Widget {
 	}
 	widget := widget.NewWidget(box)
 
-	issues := []*Issue{}
+	issues := []*PullRequest{}
 	box.issues = issues
 	refreshInterval := 120
 	go func() {

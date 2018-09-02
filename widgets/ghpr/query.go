@@ -21,7 +21,7 @@ type TimelineItem struct {
 	Event    ReviewRequestedEvent `graphql:"... on ReviewRequestedEvent"`
 }
 
-type PullRequest struct {
+type GhPullRequest struct {
 	Title    string
 	Url      ghbv4.URI
 	Timeline struct {
@@ -38,14 +38,14 @@ type PullRequest struct {
 	} `graphql:"reviews(last: 10)"`
 }
 
-func FetchPullRequestsWithGraphQL(client *ghbv4.Client) ([]*Issue, error) {
+func FetchPullRequestsWithGraphQL(client *ghbv4.Client) ([]*PullRequest, error) {
 	var query struct {
 		Viewer struct {
 			Login        string
 			Name         ghbv4.String
 			CreatedAt    ghbv4.DateTime
 			PullRequests struct {
-				Nodes []PullRequest
+				Nodes []GhPullRequest
 			} `graphql:"pullRequests(last: 10, states: [OPEN], orderBy: {field: CREATED_AT, direction: DESC})"`
 		}
 	}
@@ -54,22 +54,22 @@ func FetchPullRequestsWithGraphQL(client *ghbv4.Client) ([]*Issue, error) {
 	if err != nil {
 		return nil, err
 	}
-	issues := []*Issue{}
-	for _, pr := range query.Viewer.PullRequests.Nodes {
-		stateCountMap := util.ComputeReviewStatus(pr.Timeline.Nodes, pr.Reviews.Nodes, query.Viewer.Login)
+	pullRequests := []*PullRequest{}
+	for _, ghpr := range query.Viewer.PullRequests.Nodes {
+		stateCountMap := util.ComputeReviewStatus(ghpr.Timeline.Nodes, ghpr.Reviews.Nodes, query.Viewer.Login)
 
-		i := &Issue{
-			title:                pr.Title,
+		pr := &PullRequest{
+			title:                ghpr.Title,
 			isHover:              false,
-			url:                  pr.Url.String(),
+			url:                  ghpr.Url.String(),
 			approvedCount:        stateCountMap[ghbv4.PullRequestReviewStateApproved],
 			changeRequestedCount: stateCountMap[ghbv4.PullRequestReviewStateChangesRequested],
 			commentedCount:       stateCountMap[ghbv4.PullRequestReviewStateCommented],
-			status:               pr.Commits.Nodes[0].COMMIT.Status.State,
-			repositoryName:       pr.Repository.Name,
+			status:               ghpr.Commits.Nodes[0].COMMIT.Status.State,
+			repositoryName:       ghpr.Repository.Name,
 		}
 
-		issues = append(issues, i)
+		pullRequests = append(pullRequests, pr)
 	}
-	return issues, nil
+	return pullRequests, nil
 }
