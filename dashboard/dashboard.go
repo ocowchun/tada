@@ -127,6 +127,7 @@ func (d *Dashboard) Run() {
 		var w *widget.Widget
 		if newWidget != nil {
 			w = newWidget(widgetConfig, app.Stop)
+			w.Title = widgetConfig.Title
 			primitive = w
 		} else {
 			box := LoadPlugin(widgetConfig.Name, widgetConfig)
