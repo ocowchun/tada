@@ -43,6 +43,26 @@ type GhTimelineItem struct {
 	Event    ReviewRequestedEvent `graphql:"... on ReviewRequestedEvent"`
 }
 
+type GhPullRequest struct {
+	Title  string
+	Url    ghbv4.URI
+	Author struct {
+		Login string
+	}
+	Timeline struct {
+		Nodes []GhTimelineItem
+	} `graphql:"timeline(last:5)"`
+	Repository struct {
+		Name string
+	}
+	Commits struct {
+		Nodes []GhCommit
+	} `graphql:"commits(last:1)"`
+	Reviews struct {
+		Nodes []GhReview
+	} `graphql:"reviews(last: 10)"`
+}
+
 type ByCreatedAt []ReviewEvent
 
 func (a ByCreatedAt) Len() int {

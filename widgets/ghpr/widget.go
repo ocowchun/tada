@@ -9,8 +9,8 @@ import (
 	"time"
 
 	widget "github.com/ocowchun/tada/widget"
+	"github.com/ocowchun/tada/widgets/util"
 
-	ghb "github.com/google/go-github/github"
 	ghbv4 "github.com/shurcooL/githubv4"
 )
 
@@ -19,7 +19,7 @@ type GitHubBox struct {
 	isFocus        bool
 	width          int
 	height         int
-	issues         []*PullRequest
+	pullRequests   []*PullRequest
 	loading        bool
 	githubUsername string
 	githubToken    string
@@ -37,29 +37,29 @@ type PullRequest struct {
 	repositoryName       string
 }
 
-func (w *GitHubBox) Focus() {
-	w.isFocus = true
+func (box *GitHubBox) Focus() {
+	box.isFocus = true
 }
 
-func (w *GitHubBox) Blur() {
-	w.isFocus = false
-	issueIdx := findHoverIssue(w.issues)
-	if issueIdx != -1 {
-		w.issues[issueIdx].isHover = false
+func (box *GitHubBox) Blur() {
+	box.isFocus = false
+	prIdx := findHoverPr(box.pullRequests)
+	if prIdx != -1 {
+		box.pullRequests[prIdx].isHover = false
 	}
 }
 
-func (w *GitHubBox) Hover() {
-	w.isHover = true
+func (box *GitHubBox) Hover() {
+	box.isHover = true
 }
 
-func (w *GitHubBox) Unhover() {
-	w.isHover = false
+func (box *GitHubBox) Unhover() {
+	box.isHover = false
 }
 
-func (w *GitHubBox) Render(width int) []string {
+func (box *GitHubBox) Render(width int) []string {
 	lines := []string{}
-	if w.loading {
+	if box.loading {
 		line := &widget.Line{
 			Width: width,
 		}
@@ -67,13 +67,13 @@ func (w *GitHubBox) Render(width int) []string {
 		lines = append(lines, line.String())
 
 	} else {
-		for i := 0; i < len(w.issues); i++ {
-			issue := w.issues[i]
+		for i := 0; i < len(box.pullRequests); i++ {
+			pr := box.pullRequests[i]
 			line := &widget.Line{
 				Width: width,
 			}
 
-			switch issue.status {
+			switch pr.status {
 			case ghbv4.StatusStateSuccess:
 				line.AddSentence(&widget.Sentence{Content: "V ", Color: "green"})
 			case ghbv4.StatusStatePending:
@@ -85,11 +85,11 @@ func (w *GitHubBox) Render(width int) []string {
 			}
 
 			titleColor := "white"
-			if issue.isHover {
+			if pr.isHover {
 				titleColor = "red"
 			}
 
-			title := (issue.repositoryName + "/" + issue.title)
+			title := (pr.repositoryName + "/" + pr.title)
 			maxTitleLength := width - 10
 			if maxTitleLength < 0 {
 				maxTitleLength = 0
@@ -104,21 +104,21 @@ func (w *GitHubBox) Render(width int) []string {
 				Color:   titleColor,
 			})
 
-			if issue.approvedCount > 0 {
+			if pr.approvedCount > 0 {
 				line.AddSentence(&widget.Sentence{
-					Content: " V:" + strconv.Itoa(issue.approvedCount),
+					Content: " V:" + strconv.Itoa(pr.approvedCount),
 					Color:   "green",
 				})
 			}
-			if issue.changeRequestedCount > 0 {
+			if pr.changeRequestedCount > 0 {
 				line.AddSentence(&widget.Sentence{
-					Content: " X:" + strconv.Itoa(issue.changeRequestedCount),
+					Content: " X:" + strconv.Itoa(pr.changeRequestedCount),
 					Color:   "red",
 				})
 			}
-			if issue.commentedCount > 0 {
+			if pr.commentedCount > 0 {
 				line.AddSentence(&widget.Sentence{
-					Content: " C:" + strconv.Itoa(issue.commentedCount),
+					Content: " C:" + strconv.Itoa(pr.commentedCount),
 					Color:   "yellow",
 				})
 			}
@@ -129,9 +129,9 @@ func (w *GitHubBox) Render(width int) []string {
 	return lines
 }
 
-func findHoverIssue(issues []*PullRequest) int {
-	for i := 0; i < len(issues); i++ {
-		if issues[i].isHover {
+func findHoverPr(pullRequests []*PullRequest) int {
+	for i := 0; i < len(pullRequests); i++ {
+		if pullRequests[i].isHover {
 			return i
 		}
 	}
@@ -146,34 +146,34 @@ func (w *GitHubBox) InputCaptureFactory(render func()) func(event *widget.KeyEve
 			case 'r':
 				w.loading = true
 				render()
-				w.issues = w.fetchPullRequestsWithGraphQL(w.initGithubV4Client())
+				w.pullRequests = w.fetchPullRequestsWithGraphQL()
 				w.loading = false
 				render()
 			}
 		case widget.KeyDown:
-			issueIdx := findHoverIssue(w.issues)
-			if issueIdx == -1 {
-				w.issues[0].isHover = true
+			prIdx := findHoverPr(w.pullRequests)
+			if prIdx == -1 {
+				w.pullRequests[0].isHover = true
 			} else {
-				w.issues[issueIdx].isHover = false
-				newIdx := (issueIdx + 1) % len(w.issues)
-				w.issues[newIdx].isHover = true
+				w.pullRequests[prIdx].isHover = false
+				newIdx := (prIdx + 1) % len(w.pullRequests)
+				w.pullRequests[newIdx].isHover = true
 			}
 			render()
 		case widget.KeyUp:
-			issueIdx := findHoverIssue(w.issues)
-			if issueIdx == -1 {
-				w.issues[0].isHover = true
+			prIdx := findHoverPr(w.pullRequests)
+			if prIdx == -1 {
+				w.pullRequests[0].isHover = true
 			} else {
-				w.issues[issueIdx].isHover = false
-				newIdx := (issueIdx - 1 + len(w.issues)) % len(w.issues)
-				w.issues[newIdx].isHover = true
+				w.pullRequests[prIdx].isHover = false
+				newIdx := (prIdx - 1 + len(w.pullRequests)) % len(w.pullRequests)
+				w.pullRequests[newIdx].isHover = true
 			}
 			render()
 		case widget.KeyEnter:
-			issueIdx := findHoverIssue(w.issues)
-			if issueIdx != -1 {
-				cmd := exec.Command("open", w.issues[issueIdx].url)
+			prIdx := findHoverPr(w.pullRequests)
+			if prIdx != -1 {
+				cmd := exec.Command("open", w.pullRequests[prIdx].url)
 				_, err := cmd.Output()
 				if err != nil {
 					log.Printf("Command finished with error: %v", err)
@@ -184,21 +184,31 @@ func (w *GitHubBox) InputCaptureFactory(render func()) func(event *widget.KeyEve
 	}
 }
 
-func (w *GitHubBox) initGithubV4Client() *ghbv4.Client {
-	tp := &ghb.BasicAuthTransport{
-		Username: w.githubUsername,
-		Password: w.githubToken,
-	}
-	client := ghbv4.NewClient(tp.Client())
-	return client
-}
-
-func (w *GitHubBox) fetchPullRequestsWithGraphQL(client *ghbv4.Client) []*PullRequest {
-	pullRequests, err := FetchPullRequestsWithGraphQL(client)
+func (box *GitHubBox) fetchPullRequestsWithGraphQL() []*PullRequest {
+	client := util.InitGithubV4Client(box.githubUsername, box.githubToken)
+	ghPullRequests, err := FetchPullRequests(client)
 	if err != nil {
-		w.stopApp()
+		box.stopApp()
 		fmt.Println("perform query failed:")
 		fmt.Println(err.Error())
+	}
+
+	pullRequests := []*PullRequest{}
+	for _, ghpr := range ghPullRequests {
+		stateCountMap := util.ComputeReviewStatus(ghpr.Timeline.Nodes,
+			ghpr.Reviews.Nodes, ghpr.Author.Login)
+		pr := &PullRequest{
+			title:                ghpr.Title,
+			isHover:              false,
+			url:                  ghpr.Url.String(),
+			approvedCount:        stateCountMap[ghbv4.PullRequestReviewStateApproved],
+			changeRequestedCount: stateCountMap[ghbv4.PullRequestReviewStateChangesRequested],
+			commentedCount:       stateCountMap[ghbv4.PullRequestReviewStateCommented],
+			status:               ghpr.Commits.Nodes[0].COMMIT.Status.State,
+			repositoryName:       ghpr.Repository.Name,
+		}
+
+		pullRequests = append(pullRequests, pr)
 	}
 	return pullRequests
 }
@@ -223,12 +233,12 @@ func NewWidget(config widget.Config, stopApp func()) *widget.Widget {
 	}
 	widget := widget.NewWidget(box)
 
-	issues := []*PullRequest{}
-	box.issues = issues
+	pullRequests := []*PullRequest{}
+	box.pullRequests = pullRequests
 	refreshInterval := 120
 	go func() {
 		for {
-			box.issues = box.fetchPullRequestsWithGraphQL(box.initGithubV4Client())
+			box.pullRequests = box.fetchPullRequestsWithGraphQL()
 			box.loading = false
 			widget.Render()
 			time.Sleep(time.Duration(refreshInterval) * time.Second)
