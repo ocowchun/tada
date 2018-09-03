@@ -1,0 +1,5 @@
+package hackernews
+
+func foo() {
+
+}
