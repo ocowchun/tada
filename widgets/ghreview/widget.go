@@ -68,33 +68,39 @@ func (box *GhReviewBox) InputCaptureFactory(render func()) func(event *widget.Ke
 			}
 		case widget.KeyDown:
 			prIdx := findHoverPr(box.pullRequests)
-			if prIdx == -1 {
-				box.pullRequests[0].isHover = true
-			} else {
-				box.pullRequests[prIdx].isHover = false
-				newIdx := (prIdx + 1) % len(box.pullRequests)
-				box.pullRequests[newIdx].isHover = true
-			}
-			render()
-		case widget.KeyUp:
-			prIdx := findHoverPr(box.pullRequests)
-			if prIdx == -1 {
-				box.pullRequests[0].isHover = true
-			} else {
-				box.pullRequests[prIdx].isHover = false
-				newIdx := (prIdx - 1 + len(box.pullRequests)) % len(box.pullRequests)
-				box.pullRequests[newIdx].isHover = true
-			}
-			render()
-		case widget.KeyEnter:
-			prIdx := findHoverPr(box.pullRequests)
-			if prIdx != -1 {
-				cmd := exec.Command("open", box.pullRequests[prIdx].url)
-				_, err := cmd.Output()
-				if err != nil {
-					log.Printf("Command finished with error: %v", err)
+			if len(box.pullRequests) > 0 {
+				if prIdx == -1 {
+					box.pullRequests[0].isHover = true
+				} else {
+					box.pullRequests[prIdx].isHover = false
+					newIdx := (prIdx + 1) % len(box.pullRequests)
+					box.pullRequests[newIdx].isHover = true
 				}
+				render()
+			}
+		case widget.KeyUp:
+			if len(box.pullRequests) > 0 {
+				prIdx := findHoverPr(box.pullRequests)
+				if prIdx == -1 {
+					box.pullRequests[0].isHover = true
+				} else {
+					box.pullRequests[prIdx].isHover = false
+					newIdx := (prIdx - 1 + len(box.pullRequests)) % len(box.pullRequests)
+					box.pullRequests[newIdx].isHover = true
+				}
+				render()
+			}
+		case widget.KeyEnter:
+			if len(box.pullRequests) > 0 {
+				prIdx := findHoverPr(box.pullRequests)
+				if prIdx != -1 {
+					cmd := exec.Command("open", box.pullRequests[prIdx].url)
+					_, err := cmd.Output()
+					if err != nil {
+						log.Printf("Command finished with error: %v", err)
+					}
 
+				}
 			}
 		}
 	}
