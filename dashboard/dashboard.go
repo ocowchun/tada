@@ -11,6 +11,7 @@ import (
 	"github.com/ocowchun/tada/widgets/foo"
 	"github.com/ocowchun/tada/widgets/ghpr"
 	"github.com/ocowchun/tada/widgets/ghreview"
+	"github.com/ocowchun/tada/widgets/hackernews"
 	"github.com/rivo/tview"
 )
 
@@ -115,6 +116,7 @@ func (d *Dashboard) Run() {
 		"tada-github-pr":     ghpr.NewWidget,
 		"tada-github-review": ghreview.NewWidget,
 		"tada-foo":           foo.NewWidget,
+		"tada-hackernews":    hackernews.NewWidget,
 	}
 
 	for _, widgetConfig := range config.Widgets {

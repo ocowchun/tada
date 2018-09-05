@@ -1,6 +1,9 @@
 package hackernews
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -10,10 +13,10 @@ type HttpResponse struct {
 	Err      error
 }
 
-type Story struct {
-	Id    int    `json:"id"`
-	Url   string `json:"url"`
-	Title string `json:"title"`
+type HnStory struct {
+	ID           int    `json:"id"`
+	Title        string `json:"title"`
+	commentCount int    `json:"descendants"`
 }
 
 func sendRequest(url string) *HttpResponse {
@@ -33,7 +36,54 @@ func sendRequest(url string) *HttpResponse {
 	return &HttpResponse{url, resp, err}
 }
 
-func FetchStories() {
+func fetchStoryIds(amount int) ([]int, error) {
 	url := "https://hacker-news.firebaseio.com/v0/topstories.json"
+	res := sendRequest(url)
 
+	if res.Err != nil {
+		return nil, res.Err
+	}
+	respBody, _ := ioutil.ReadAll(res.Response.Body)
+	var storyIds []int
+	if err := json.Unmarshal(respBody, &storyIds); err != nil {
+		return nil, err
+	}
+	return storyIds[0:amount], nil
+}
+
+func FetchStories(amount int) ([]HnStory, error) {
+	storyIds, err := fetchStoryIds(amount)
+	if err != nil {
+		return nil, err
+	}
+	resCh := make(chan *HttpResponse)
+	for _, storyID := range storyIds {
+		url := fmt.Sprintf("https://hacker-news.firebaseio.com/v0/item/%v.json", storyID)
+		go func() {
+			resCh <- sendRequest(url)
+		}()
+	}
+
+	storyMap := make(map[int]HnStory)
+
+	for range storyIds {
+		res := <-resCh
+		if res.Err != nil {
+			return nil, res.Err
+		}
+		respBody, err := ioutil.ReadAll(res.Response.Body)
+		if err != nil {
+			return nil, err
+		}
+		var story HnStory
+		if err := json.Unmarshal(respBody, &story); err != nil {
+			return nil, err
+		}
+		storyMap[story.ID] = story
+	}
+	stories := []HnStory{}
+	for _, storyID := range storyIds {
+		stories = append(stories, storyMap[storyID])
+	}
+	return stories, nil
 }
