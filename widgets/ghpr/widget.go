@@ -138,47 +138,53 @@ func findHoverPr(pullRequests []*PullRequest) int {
 	return -1
 }
 
-func (w *GitHubBox) InputCaptureFactory(render func()) func(event *widget.KeyEvent) {
+func (box *GitHubBox) InputCaptureFactory(render func()) func(event *widget.KeyEvent) {
 	return func(event *widget.KeyEvent) {
 		switch event.Key {
 		case widget.KeyRune:
 			switch event.Rune {
 			case 'r':
-				w.loading = true
+				box.loading = true
 				render()
-				w.pullRequests = w.fetchPullRequestsWithGraphQL()
-				w.loading = false
+				box.pullRequests = box.fetchPullRequestsWithGraphQL()
+				box.loading = false
 				render()
 			}
 		case widget.KeyDown:
-			prIdx := findHoverPr(w.pullRequests)
-			if prIdx == -1 {
-				w.pullRequests[0].isHover = true
-			} else {
-				w.pullRequests[prIdx].isHover = false
-				newIdx := (prIdx + 1) % len(w.pullRequests)
-				w.pullRequests[newIdx].isHover = true
-			}
-			render()
-		case widget.KeyUp:
-			prIdx := findHoverPr(w.pullRequests)
-			if prIdx == -1 {
-				w.pullRequests[0].isHover = true
-			} else {
-				w.pullRequests[prIdx].isHover = false
-				newIdx := (prIdx - 1 + len(w.pullRequests)) % len(w.pullRequests)
-				w.pullRequests[newIdx].isHover = true
-			}
-			render()
-		case widget.KeyEnter:
-			prIdx := findHoverPr(w.pullRequests)
-			if prIdx != -1 {
-				cmd := exec.Command("open", w.pullRequests[prIdx].url)
-				_, err := cmd.Output()
-				if err != nil {
-					log.Printf("Command finished with error: %v", err)
+			if len(box.pullRequests) > 0 {
+				prIdx := findHoverPr(box.pullRequests)
+				if prIdx == -1 {
+					box.pullRequests[0].isHover = true
+				} else {
+					box.pullRequests[prIdx].isHover = false
+					newIdx := (prIdx + 1) % len(box.pullRequests)
+					box.pullRequests[newIdx].isHover = true
 				}
+				render()
+			}
+		case widget.KeyUp:
+			if len(box.pullRequests) > 0 {
+				prIdx := findHoverPr(box.pullRequests)
+				if prIdx == -1 {
+					box.pullRequests[0].isHover = true
+				} else {
+					box.pullRequests[prIdx].isHover = false
+					newIdx := (prIdx - 1 + len(box.pullRequests)) % len(box.pullRequests)
+					box.pullRequests[newIdx].isHover = true
+				}
+				render()
+			}
+		case widget.KeyEnter:
+			if len(box.pullRequests) > 0 {
+				prIdx := findHoverPr(box.pullRequests)
+				if prIdx != -1 {
+					cmd := exec.Command("open", box.pullRequests[prIdx].url)
+					_, err := cmd.Output()
+					if err != nil {
+						log.Printf("Command finished with error: %v", err)
+					}
 
+				}
 			}
 		}
 	}
