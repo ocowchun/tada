@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/ocowchun/tada/widget"
@@ -122,24 +123,15 @@ func (box *HackerNewsBox) Render(width int) []string {
 			line := &widget.Line{
 				Width: width,
 			}
-			// switch pr.status {
-			// case ghbv4.StatusStateSuccess:
-			// 	line.AddSentence(&widget.Sentence{Content: "V ", Color: "green"})
-			// case ghbv4.StatusStatePending:
-			// 	line.AddSentence(&widget.Sentence{Content: "O ", Color: "yellow"})
-			// case ghbv4.StatusStateFailure:
-			// 	line.AddSentence(&widget.Sentence{Content: "X ", Color: "red"})
-			// case "":
-			// 	line.AddSentence(&widget.Sentence{Content: "  ", Color: "white"})
-			// }
+
 			titleColor := "white"
 			if story.isHover {
 				titleColor = "red"
 			}
-			// username := pr.authorUsername
-			// title := (pr.repositoryName + "/" + pr.title)
-			title := story.title
-			maxTitleLength := width - 10 //12 - len(username)
+
+			replacer := strings.NewReplacer("‘", "`", "’", "`")
+			title := replacer.Replace(story.title)
+			maxTitleLength := width - 10
 			if maxTitleLength < 0 {
 				maxTitleLength = 0
 			}
