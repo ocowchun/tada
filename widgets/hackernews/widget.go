@@ -24,9 +24,10 @@ type HackerNewsBox struct {
 }
 
 type Story struct {
-	id      int `json:"id"`
-	title   string
-	isHover bool
+	id           int `json:"id"`
+	title        string
+	isHover      bool
+	commentCount int
 }
 
 func (s *Story) Url() string {
@@ -129,7 +130,13 @@ func (box *HackerNewsBox) Render(width int) []string {
 				titleColor = "red"
 			}
 
-			replacer := strings.NewReplacer("‘", "`", "’", "`")
+			replacer := strings.NewReplacer("‘", "`",
+				"’", "`",
+				",", ",",
+				"–", "-",
+				"“", "\"",
+				"”", "\"",
+			)
 			title := replacer.Replace(story.title)
 			maxTitleLength := width - 10
 			if maxTitleLength < 0 {
@@ -143,6 +150,7 @@ func (box *HackerNewsBox) Render(width int) []string {
 				Content: title,
 				Color:   titleColor,
 			})
+
 			lines = append(lines, line.String())
 		}
 	}
@@ -161,8 +169,9 @@ func (box *HackerNewsBox) fetchStories() []*Story {
 	stories := []*Story{}
 	for _, hnStory := range hnStories {
 		story := &Story{
-			id:    hnStory.ID,
-			title: hnStory.Title,
+			id:           hnStory.ID,
+			title:        hnStory.Title,
+			commentCount: hnStory.CommentCount,
 		}
 		stories = append(stories, story)
 	}
@@ -170,10 +179,16 @@ func (box *HackerNewsBox) fetchStories() []*Story {
 }
 
 func NewWidget(config widget.Config, stopApp func()) *widget.Widget {
+	storyAmount := 8
+	hnStoryAmount, ok := config.Options["HN_STORY_AMOUNT"].(int64)
+	if ok {
+		storyAmount = int(hnStoryAmount)
+	}
+
 	box := &HackerNewsBox{
 		loading:     true,
 		stopApp:     stopApp,
-		storyAmount: 8,
+		storyAmount: storyAmount,
 	}
 	widget := widget.NewWidget(box)
 	stories := []*Story{}

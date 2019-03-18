@@ -16,7 +16,7 @@ type HttpResponse struct {
 type HnStory struct {
 	ID           int    `json:"id"`
 	Title        string `json:"title"`
-	commentCount int    `json:"descendants"`
+	CommentCount int    `json:"descendants"`
 }
 
 func sendRequest(url string) *HttpResponse {
