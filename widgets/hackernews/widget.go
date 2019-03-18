@@ -179,10 +179,16 @@ func (box *HackerNewsBox) fetchStories() []*Story {
 }
 
 func NewWidget(config widget.Config, stopApp func()) *widget.Widget {
+	storyAmount := 8
+	hnStoryAmount, ok := config.Options["HN_STORY_AMOUNT"].(int64)
+	if ok {
+		storyAmount = int(hnStoryAmount)
+	}
+
 	box := &HackerNewsBox{
 		loading:     true,
 		stopApp:     stopApp,
-		storyAmount: 8,
+		storyAmount: storyAmount,
 	}
 	widget := widget.NewWidget(box)
 	stories := []*Story{}
