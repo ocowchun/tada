@@ -12,8 +12,8 @@ type PullRequestItem struct {
 	Pr       util.GhPullRequest `graphql:"... on PullRequest"`
 }
 
-func FetchReviewRequests(client *ghbv4.Client) ([]util.GhPullRequest, error) {
-	githubUsername := "ocowchun"
+func FetchReviewRequests(client *ghbv4.Client, githubUsername string) ([]util.GhPullRequest, error) {
+	// githubUsername := "ocowchun"
 	variables := map[string]interface{}{
 		"review_query": ghbv4.String("is:open is:pr review-requested:" + githubUsername + " archived:false"),
 	}

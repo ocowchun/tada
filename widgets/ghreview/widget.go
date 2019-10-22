@@ -193,7 +193,7 @@ type PullRequest struct {
 
 func (box *GhReviewBox) fetchReviewRequests() []*PullRequest {
 	client := util.InitGithubV4Client(box.githubUsername, box.githubToken)
-	ghPullRequests, err := FetchReviewRequests(client)
+	ghPullRequests, err := FetchReviewRequests(client, box.githubUsername)
 	if err != nil {
 		box.stopApp()
 		fmt.Println("perform query failed:")
