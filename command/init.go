@@ -48,7 +48,7 @@ func (*InitCommand) Run(args []string) int {
 	//	Options: opts,
 	//}
 	//config := dashboard.Config{
-	//	Widgets: []widget.Config{w},
+	//	widgets: []widget.Config{w},
 	//}
 	//
 	//writer := bufio.NewWriter(f)

@@ -1,7 +1,9 @@
-package command
+package dashboard
 
 import (
 	ui "github.com/gizak/termui/v3"
+	widget "github.com/ocowchun/tada/Widget"
+	widgets "github.com/ocowchun/tada/widgets"
 	"log"
 )
 
@@ -20,15 +22,16 @@ func (d Dashboard) Run() error {
 	}
 	defer ui.Close()
 
-	l := newListWidget()
+	// TODO: figure out a better way to init widgets
+	l := widgets.NewList()
 	l.SetRect(0, 0, 25, 8)
 	l.SetBorderStyle(defaultBorderStyle)
 
-	l2 := newListWidget()
+	l2 := widgets.NewList()
 	l2.SetRect(10, 10, 35, 18)
 	l2.SetBorderStyle(defaultBorderStyle)
 
-	widgets := []Widget{l, l2}
+	widgets := []widget.Widget{l, l2}
 
 	ds := make([]ui.Drawable, 0, len(widgets))
 	ds = append(ds, widgets[0])
@@ -37,8 +40,8 @@ func (d Dashboard) Run() error {
 	ui.Render(ds...)
 
 	uiEvents := ui.PollEvents()
-	//TODO: Implement Focus
-	var currentWidget Widget
+
+	var currentWidget widget.Widget
 	currentWidgetIdx := -1
 	widgetMode := false
 	for {
@@ -90,6 +93,6 @@ func (d Dashboard) Run() error {
 	return nil
 }
 
-func NewDashboard() *Dashboard {
+func New() *Dashboard {
 	return &Dashboard{}
 }

@@ -1,10 +1,10 @@
-package command
+package widgets
 
 import (
-	"github.com/gizak/termui/v3/widgets"
-
 	ui "github.com/gizak/termui/v3"
+	"github.com/gizak/termui/v3/widgets"
 )
+
 
 type MyList struct {
 	previousKey string
@@ -46,7 +46,7 @@ func (l *MyList) SetBorderStyle(style ui.Style) {
 	l.BorderStyle = style
 }
 
-func newList() *MyList {
+func NewList() *MyList {
 	l := widgets.NewList()
 	l.Title = "List"
 	l.Rows = []string{
@@ -64,3 +64,4 @@ func newList() *MyList {
 	}
 	return result
 }
+
