@@ -132,14 +132,13 @@ func (d Dashboard) Run() error {
 	ws := make([]widget.Widget, 0)
 	for _, widgetConfig := range dashboardConfig.Widgets {
 		w := factoryMap[widgetConfig.Name](widgetConfig.Options, ch)
-		w.SetRect(widgetConfig.X, widgetConfig.Y, widgetConfig.Width, widgetConfig.Height)
+		w.SetRect(widgetConfig.X, widgetConfig.Y, widgetConfig.X+widgetConfig.Width, widgetConfig.Y+widgetConfig.Height)
 		ws = append(ws, w)
 	}
 	for _, w := range ws {
 		ds = append(ds, w)
 	}
 	ready <- struct{}{}
-
 
 	var currentWidget widget.Widget
 	currentWidgetIdx := -1

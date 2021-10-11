@@ -75,6 +75,36 @@ func fetchPullRequests(client *githubv4.Client) ([]GhPullRequest, error) {
 	return query.Viewer.PullRequests.Nodes, nil
 }
 
+
+type PullRequestItem struct {
+	Typename string             `graphql:"typename :__typename"`
+	Pr       GhPullRequest `graphql:"... on PullRequest"`
+}
+
+func fetchReviewRequests(client *githubv4.Client, githubUsername string) ([]GhPullRequest, error) {
+	variables := map[string]interface{}{
+		"review_query": githubv4.String("is:open is:pr review-requested:" + githubUsername + " archived:false"),
+	}
+
+	var query struct {
+		Search struct {
+			Nodes []PullRequestItem
+		} `graphql:"search(last: 10, type: ISSUE, query: $review_query)"`
+	}
+
+	//TODO: add timeout
+	err := client.Query(context.Background(), &query, variables)
+	if err != nil {
+		return nil, err
+	}
+
+	pullRequests := make([]GhPullRequest, 0)
+	for _, node := range query.Search.Nodes {
+		pullRequests = append(pullRequests, node.Pr)
+	}
+	return pullRequests, nil
+}
+
 func computePullRequestReviewStats(pr GhPullRequest) map[githubv4.PullRequestReviewState]int32 {
 	reviews := pr.Reviews.Nodes
 	m := make(map[string]GhReview)
