@@ -1,11 +1,17 @@
 package dashboard
 
 import (
+	"errors"
 	ui "github.com/gizak/termui/v3"
 	widget "github.com/ocowchun/tada/Widget"
-	widgets "github.com/ocowchun/tada/widgets"
-	"github.com/ocowchun/tada/widgets/github_pr_list"
+	"github.com/ocowchun/tada/widgets"
+	"github.com/ocowchun/tada/widgets/ghpr"
+	"github.com/pelletier/go-toml"
+	"io/ioutil"
 	"log"
+	"os"
+	"os/user"
+	"path/filepath"
 )
 
 type Dashboard struct {
@@ -17,37 +23,128 @@ var (
 	focusedBorderStyle  = ui.NewStyle(ui.ColorGreen)
 )
 
+type WidgetFactory func(map[string]interface{}, chan<- struct{}) widget.Widget
+
+func Home() (string, error) {
+	currentUser, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	if currentUser.HomeDir == "" {
+		return "", errors.New("cannot find user-specific home dir")
+	}
+
+	return currentUser.HomeDir, nil
+}
+
+func ExpandHomeDir(path string) (string, error) {
+	if len(path) == 0 {
+		return path, nil
+	}
+
+	if path[0] != '~' {
+		return path, nil
+	}
+
+	if len(path) > 1 && path[1] != '/' && path[1] != '\\' {
+		return "", errors.New("cannot expand user-specific home dir")
+	}
+
+	dir, err := Home()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(dir, path[1:]), nil
+}
+
+func findBasePath() string {
+	basePath := os.Getenv("TADA_PATH")
+	if basePath == "" {
+		path, err := ExpandHomeDir("~/.tada")
+		if err != nil {
+			log.Printf("%v", err)
+		}
+		basePath = path
+	}
+
+	return basePath
+}
+
+type WidgetConfig struct {
+	Name    string
+	Width   int
+	Height  int
+	X       int
+	Y       int
+	Options map[string]interface{}
+}
+
+type Config struct {
+	Widgets []WidgetConfig
+}
+
+func loadConfig() Config {
+	basePath := findBasePath()
+	raw, err := ioutil.ReadFile(basePath + "/tada.toml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var config Config
+	err = toml.Unmarshal(raw, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return config
+}
+
 func (d Dashboard) Run() error {
 	if err := ui.Init(); err != nil {
 		log.Fatalf("failed to initialize termui: %v", err)
 	}
 	defer ui.Close()
 
-	// TODO: figure out a better way to init widgets
-	l := github_pr_list.NewGitHubPRList()
-	l.SetRect(0, 0, 55, 8)
-	l.SetBorderStyle(defaultBorderStyle)
+	factoryMap := make(map[string]WidgetFactory)
+	factoryMap["ghpr"] = ghpr.NewGitHubPRList
+	factoryMap["myList"] = widgets.NewList
 
-	l2 := widgets.NewList()
-	l2.SetRect(10, 10, 35, 18)
-	l2.SetBorderStyle(defaultBorderStyle)
+	ch := make(chan struct{})
+	ready := make(chan struct{})
+	ds := make([]ui.Drawable, 0)
+	go func() {
+		isReady := false
+		for {
+			select {
+			case <-ch:
+				if isReady {
+					ui.Render(ds...)
+				}
+			case <-ready:
+				isReady = true
+			}
+		}
+	}()
+	ch <- struct{}{}
 
-	widgets := []widget.Widget{l, l2}
-
-	ds := make([]ui.Drawable, 0, len(widgets))
-	for _, w := range widgets {
+	dashboardConfig := loadConfig()
+	ws := make([]widget.Widget, 0)
+	for _, widgetConfig := range dashboardConfig.Widgets {
+		w := factoryMap[widgetConfig.Name](widgetConfig.Options, ch)
+		w.SetRect(widgetConfig.X, widgetConfig.Y, widgetConfig.Width, widgetConfig.Height)
+		ws = append(ws, w)
+	}
+	for _, w := range ws {
 		ds = append(ds, w)
 	}
-	//ds = append(ds, widgets[0])
-	//ds = append(ds, widgets[1])
+	ready <- struct{}{}
 
-	ui.Render(ds...)
-
-	uiEvents := ui.PollEvents()
 
 	var currentWidget widget.Widget
 	currentWidgetIdx := -1
 	widgetMode := false
+	uiEvents := ui.PollEvents()
 	for {
 		e := <-uiEvents
 		switch e.ID {
@@ -62,17 +159,17 @@ func (d Dashboard) Run() error {
 			switch e.ID {
 			case "<Right>":
 				currentWidgetIdx++
-				if currentWidgetIdx == len(widgets) {
+				if currentWidgetIdx == len(ws) {
 					currentWidgetIdx = 0
 				}
-				currentWidget = widgets[currentWidgetIdx]
+				currentWidget = ws[currentWidgetIdx]
 				currentWidget.SetBorderStyle(selectedBorderStyle)
 			case "<Left>":
 				currentWidgetIdx--
 				if currentWidgetIdx < 0 {
-					currentWidgetIdx = len(widgets) - 1
+					currentWidgetIdx = len(ws) - 1
 				}
-				currentWidget = widgets[currentWidgetIdx]
+				currentWidget = ws[currentWidgetIdx]
 				currentWidget.SetBorderStyle(selectedBorderStyle)
 			case "<Enter>":
 				if currentWidget != nil {
@@ -80,7 +177,9 @@ func (d Dashboard) Run() error {
 					currentWidget.SetBorderStyle(focusedBorderStyle)
 				}
 			case "r":
-				//	TODO: refresh all components
+				for _, w := range ws {
+					w.Refresh()
+				}
 			}
 
 		} else {
@@ -91,7 +190,7 @@ func (d Dashboard) Run() error {
 				currentWidget.HandleUIEvent(e)
 			}
 		}
-		ui.Render(ds...)
+		ch <- struct{}{}
 
 	}
 	return nil

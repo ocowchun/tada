@@ -1,9 +1,10 @@
-package github_pr_list
+package ghpr
 
 import (
 	"bytes"
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
+	widget "github.com/ocowchun/tada/Widget"
 	"github.com/shurcooL/githubv4"
 	"log"
 	"os/exec"
@@ -16,6 +17,7 @@ type GitHubPRList struct {
 	pullRequests []PullRequest
 	prLock       sync.Mutex
 	ghClient     *githubv4.Client
+	renderCh     chan<- struct{}
 }
 
 func (l *GitHubPRList) HandleUIEvent(e ui.Event) {
@@ -126,12 +128,21 @@ func (l *GitHubPRList) fetchPullRequests() {
 	}
 }
 
+func (l *GitHubPRList) Refresh() {
+	l.updatePullRequests(make([]PullRequest, 0))
+	l.Rows = []string{"loading..."}
+
+	//log.Println("updatePR")
+	go l.fetchPullRequests()
+}
+
 func (l *GitHubPRList) updatePullRequests(pullRequests []PullRequest) {
 	l.prLock.Lock()
 	defer l.prLock.Unlock()
 
 	l.pullRequests = pullRequests
 	l.Rows = toRows(pullRequests)
+	l.renderCh <- struct{}{}
 }
 
 func (l *GitHubPRList) selectedPullRequest() *PullRequest {
@@ -145,13 +156,18 @@ func (l *GitHubPRList) selectedPullRequest() *PullRequest {
 	return &l.pullRequests[i]
 }
 
-func NewGitHubPRList() *GitHubPRList {
+func NewGitHubPRList(config map[string]interface{}, renderCh chan<- struct{}) widget.Widget {
 	l := widgets.NewList()
 	l.Title = "Pull Requests"
 	l.SelectedRowStyle = ui.NewStyle(ui.ColorWhite, ui.ColorBlack, ui.ModifierUnderline)
 	l.WrapText = false
 
-	ghClient, err := newGitHubClient()
+	if _, existed := config["GITHUB_TOKEN"]; !existed {
+		log.Fatal("You must provide GITHUB_TOKEN to enable this Widget")
+	}
+
+	accessToken := config["GITHUB_TOKEN"].(string)
+	ghClient, err := newGitHubClient(accessToken)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -159,8 +175,8 @@ func NewGitHubPRList() *GitHubPRList {
 	component := &GitHubPRList{
 		List:     *l,
 		ghClient: ghClient,
+		renderCh: renderCh,
 	}
-	component.fetchPullRequests()
-
+	go component.Refresh()
 	return component
 }

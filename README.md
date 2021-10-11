@@ -30,7 +30,7 @@ height = 3
 x = 1
 # widget y-axis
 y = 0
-  [Widgets.Options]
+  [widgets.Options]
     GITHUB_USERNAME = "your-github-username"
     GITHUB_TOKEN = "your-github-developer-token"
 ```

@@ -3,8 +3,8 @@ package widgets
 import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
+	widget "github.com/ocowchun/tada/Widget"
 )
-
 
 type MyList struct {
 	previousKey string
@@ -46,7 +46,11 @@ func (l *MyList) SetBorderStyle(style ui.Style) {
 	l.BorderStyle = style
 }
 
-func NewList() *MyList {
+func (l *MyList) Refresh() {
+
+}
+
+func NewList(config map[string]interface{}, render chan<- struct{}) widget.Widget {
 	l := widgets.NewList()
 	l.Title = "List"
 	l.Rows = []string{
@@ -66,4 +70,3 @@ func NewList() *MyList {
 	}
 	return result
 }
-

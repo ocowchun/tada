@@ -1,10 +1,9 @@
-package github_pr_list
+package ghpr
 
 import (
 	"context"
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
-	"os"
 )
 
 type GhReview struct {
@@ -68,6 +67,7 @@ func fetchPullRequests(client *githubv4.Client) ([]GhPullRequest, error) {
 		}
 	}
 
+	//TODO: add timeout
 	err := client.Query(context.Background(), &query, nil)
 	if err != nil {
 		return nil, err
@@ -102,9 +102,9 @@ func computePullRequestReviewStats(pr GhPullRequest) map[githubv4.PullRequestRev
 	return result
 }
 
-func newGitHubClient() (*githubv4.Client, error) {
+func newGitHubClient(accessToken string) (*githubv4.Client, error) {
 	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
+		&oauth2.Token{AccessToken: accessToken},
 	)
 	httpClient := oauth2.NewClient(context.Background(), src)
 
