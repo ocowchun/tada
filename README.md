@@ -48,6 +48,7 @@ y = 12
 
 ### Expected Widget
 * GitHub pr (80% done!)
+* Grafana Alerts
 * Circleci status
 * Heroku status
 

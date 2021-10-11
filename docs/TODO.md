@@ -1,2 +1,0 @@
-- [ ] validate config is ok to run.
-- [ ] Write document about how to build custom plugin
