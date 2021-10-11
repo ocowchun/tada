@@ -20,27 +20,35 @@ $ cd ~/.tada/
 ### tada.toml
 ```toml
 [[widgets]]
-# widget name
-name = "tada-github-pr"
+name = "ghpr"
 # widget width
-width = 3
-# widget height
-height = 3
+width = 70
+height = 8
 # widget x-axis
 x = 1
 # widget y-axis
-y = 0
+y = 1
   [widgets.Options]
-    GITHUB_USERNAME = "your-github-username"
-    GITHUB_TOKEN = "your-github-developer-token"
+    GITHUB_TOKEN = "your-secret-token"
+    LIST_TYPE = "pr"
+[[widgets]]
+name = "ghpr"
+# widget width
+width = 70
+height = 8
+# widget x-axis
+x = 1
+# widget y-axis
+y = 12
+  [widgets.Options]
+    GITHUB_TOKEN = "your-secret-token"
+    LIST_TYPE = "review"
+    GITHUB_USERNAME = "ocowchun"
 ```
 
 ### Expected Widget
 * GitHub pr (80% done!)
-* Codeship status
 * Circleci status
 * Heroku status
-* Metabase
-* Rollbar
 
 MIT
