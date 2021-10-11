@@ -51,6 +51,8 @@ func NewList() *MyList {
 	l.Title = "List"
 	l.Rows = []string{
 		"[0] github.com/gizak/termui/v3",
+		"[0] github.com/gizak/termui/v3",
+		"[0] github.com/gizak/termui/v3",
 		"[1] [你好，世界](fg:blue)",
 		"[2] [こんにちは世界](fg:red)",
 		"[3] [color](fg:white,bg:green) output",

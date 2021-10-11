@@ -4,6 +4,7 @@ import (
 	ui "github.com/gizak/termui/v3"
 	widget "github.com/ocowchun/tada/Widget"
 	widgets "github.com/ocowchun/tada/widgets"
+	"github.com/ocowchun/tada/widgets/github_pr_list"
 	"log"
 )
 
@@ -23,8 +24,8 @@ func (d Dashboard) Run() error {
 	defer ui.Close()
 
 	// TODO: figure out a better way to init widgets
-	l := widgets.NewList()
-	l.SetRect(0, 0, 25, 8)
+	l := github_pr_list.NewGitHubPRList()
+	l.SetRect(0, 0, 55, 8)
 	l.SetBorderStyle(defaultBorderStyle)
 
 	l2 := widgets.NewList()
@@ -34,8 +35,11 @@ func (d Dashboard) Run() error {
 	widgets := []widget.Widget{l, l2}
 
 	ds := make([]ui.Drawable, 0, len(widgets))
-	ds = append(ds, widgets[0])
-	ds = append(ds, widgets[1])
+	for _, w := range widgets {
+		ds = append(ds, w)
+	}
+	//ds = append(ds, widgets[0])
+	//ds = append(ds, widgets[1])
 
 	ui.Render(ds...)
 
