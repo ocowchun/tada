@@ -13,8 +13,6 @@ type MyList struct {
 
 func (l *MyList) HandleUIEvent(e ui.Event) {
 	switch e.ID {
-	//case "q", "<C-c>":
-	//	return 0
 	case "j", "<Down>":
 		l.ScrollDown()
 	case "k", "<Up>":
@@ -60,7 +58,6 @@ func newList() *MyList {
 	}
 	l.TextStyle = ui.NewStyle(ui.ColorYellow)
 	l.WrapText = false
-	l.SetRect(0, 0, 25, 8)
 
 	result := &MyList{
 		List: *l,

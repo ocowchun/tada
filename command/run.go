@@ -2,8 +2,6 @@ package command
 
 import (
 	"github.com/mitchellh/cli"
-	"log"
-
 	//"github.com/ocowchun/tada/dashboard"
 	ui "github.com/gizak/termui/v3"
 )
@@ -19,6 +17,7 @@ type Widget interface {
 	HandleUIEvent(event ui.Event)
 	ui.Drawable
 	SetBorderStyle(style ui.Style)
+	//SetRect(x1, y1, x2, y2 int)
 }
 
 func newListWidget() Widget {
@@ -29,34 +28,12 @@ func newListWidget() Widget {
 func (*RunCommand) Run(args []string) int {
 	//d := dashboard.NewDashboard()
 	//d.Run()
+	d := NewDashboard()
+	err := d.Run()
 
-	if err := ui.Init(); err != nil {
-		log.Fatalf("failed to initialize termui: %v", err)
+	if err != nil {
+		return 1
 	}
-	defer ui.Close()
-
-	//events :
-	l := newListWidget()
-
-	defaultBorderStyle := ui.NewStyle(ui.ColorWhite)
-	//focusedBorderStyle := ui.NewStyle(ui.ColorYellow)
-
-	l.SetBorderStyle(defaultBorderStyle)
-	ui.Render(l)
-
-	uiEvents := ui.PollEvents()
-	for {
-		e := <-uiEvents
-
-		switch e.ID {
-		case "q", "<C-c>":
-			return 0
-		}
-		l.HandleUIEvent(e)
-		ui.Render(l)
-
-	}
-
 	return 0
 }
 
