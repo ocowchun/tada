@@ -1,16 +1,7 @@
 package command
 
 import (
-	//"bufio"
-	//"fmt"
-	//"log"
-	//"os"
-
-	//"github.com/BurntSushi/toml"
 	"github.com/mitchellh/cli"
-	//"github.com/ocowchun/tada/dashboard"
-	//"github.com/ocowchun/tada/utils"
-	//"github.com/ocowchun/tada/widget"
 )
 
 type InitCommand struct {

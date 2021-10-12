@@ -6,6 +6,7 @@ import (
 	widget "github.com/ocowchun/tada/Widget"
 	"github.com/ocowchun/tada/widgets"
 	"github.com/ocowchun/tada/widgets/ghpr"
+	"github.com/ocowchun/tada/widgets/hackernews"
 	"github.com/pelletier/go-toml"
 	"io/ioutil"
 	"log"
@@ -109,6 +110,7 @@ func (d Dashboard) Run() error {
 	factoryMap := make(map[string]WidgetFactory)
 	factoryMap["ghpr"] = ghpr.NewGitHubPRList
 	factoryMap["myList"] = widgets.NewList
+	factoryMap["hackernews"] = hackernews.NewHackerNews
 
 	ch := make(chan struct{})
 	ready := make(chan struct{})
