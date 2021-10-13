@@ -5,7 +5,6 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 	widget "github.com/ocowchun/tada/Widget"
-	"github.com/shurcooL/githubv4"
 	"log"
 	"os/exec"
 	"sync"
@@ -16,7 +15,6 @@ type HackerNews struct {
 	widgets.List
 	stories   []Story
 	storyLock sync.Mutex
-	ghClient  *githubv4.Client
 	renderCh  chan<- struct{}
 }
 
